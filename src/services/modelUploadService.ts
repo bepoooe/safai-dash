@@ -37,24 +37,26 @@ export class ModelUploadService {
   /**
    * Validate incoming detection data
    */
-  static validateDetection(data: any): { valid: boolean; error?: string } {
-    if (!data) {
+  static validateDetection(data: unknown): { valid: boolean; error?: string } {
+    if (!data || typeof data !== 'object') {
       return { valid: false, error: 'No data provided' };
     }
 
-    if (typeof data.detection_count !== 'number' || data.detection_count < 0) {
+    const record = data as Record<string, unknown>;
+
+    if (typeof record.detection_count !== 'number' || record.detection_count < 0) {
       return { valid: false, error: 'Invalid detection_count' };
     }
 
-    if (!Array.isArray(data.confidence_scores)) {
+    if (!Array.isArray(record.confidence_scores)) {
       return { valid: false, error: 'confidence_scores must be an array' };
     }
 
-    if (!data.location) {
+    if (!record.location || typeof record.location !== 'object') {
       return { valid: false, error: 'location is required' };
     }
 
-    const loc = data.location;
+    const loc = record.location as Record<string, unknown>;
     if (typeof loc.latitude !== 'number' || typeof loc.longitude !== 'number') {
       return { valid: false, error: 'Invalid location coordinates' };
     }
