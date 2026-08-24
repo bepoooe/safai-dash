@@ -207,41 +207,39 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
   }
 
   return (
-    <div className={`bg-white shadow-lg rounded-lg overflow-hidden ${className}`}>
+    <div className={`bg-white/95 shadow-md rounded-2xl border border-[#ded5c5] overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <MapPin className="h-8 w-8 text-white" />
-            <div>
-              <h2 className="text-xl font-bold text-white">Location Intelligence</h2>
-              <p className="text-green-100 text-sm">Area-specific garbage overflow analysis</p>
-            </div>
+      <div className="bg-gradient-to-r from-[#8a4220] to-[#ba7861] px-4 sm:px-6 py-4">
+        <div className="flex items-center space-x-3">
+          <MapPin className="h-7 w-7 sm:h-8 sm:w-8 text-white flex-shrink-0" />
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-white">Location Intelligence</h2>
+            <p className="text-amber-100 text-xs sm:text-sm">Area-specific garbage overflow analysis</p>
           </div>
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Area Selection Dropdown */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="mb-5 sm:mb-6">
+          <label className="block text-sm font-bold text-[#1f1712] mb-2">
             Select Area
           </label>
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent flex items-center justify-between"
+              className="w-full bg-[#fdfbf7] border border-[#ded5c5] rounded-xl px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-[#964b28] focus:border-transparent flex items-center justify-between"
             >
-              <span className="text-gray-900">
+              <span className="text-[#1f1712] truncate pr-2 font-medium">
                 {selectedArea || 'Select an area...'}
                 {selectedAreaData && (
                   <span className="text-gray-500 ml-2">({selectedAreaData.count} detections)</span>
                 )}
               </span>
               {isDropdownOpen ? (
-                <ChevronUp className="h-5 w-5 text-gray-400" />
+                <ChevronUp className="h-5 w-5 text-gray-400 flex-shrink-0" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-gray-400" />
+                <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />
               )}
             </button>
 
@@ -258,11 +256,11 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                       selectedArea === area.area ? 'bg-green-50 text-green-700' : 'text-gray-900'
                     }`}
                   >
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{area.area}</span>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                      <span className="font-medium text-sm">{area.area}</span>
+                      <div className="flex items-center space-x-2 text-xs text-gray-500">
                         <span>{area.count} detections</span>
-                        <Clock className="h-3 w-3" />
+                        <Clock className="h-3 w-3 flex-shrink-0" />
                         <span>{formatTimestamp(area.latestDetection)}</span>
                       </div>
                     </div>
@@ -275,32 +273,32 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
 
         {/* Area Statistics */}
         {stats && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Activity className="h-5 w-5 mr-2 text-green-600" />
+          <div className="mb-5 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Activity className="h-5 w-5 mr-2 text-green-600 flex-shrink-0" />
               {selectedArea} - Analytics
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
-                <div className="text-sm text-blue-600 font-medium">Total Detections</div>
-                <div className="text-2xl font-bold text-blue-900">{stats.totalDetections}</div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border-l-4 border-blue-500">
+                <div className="text-xs sm:text-sm text-blue-600 font-medium">Total Detections</div>
+                <div className="text-xl sm:text-2xl font-bold text-blue-900">{stats.totalDetections}</div>
                 <div className="text-xs text-blue-600">In this area</div>
               </div>
-              <div className={`p-4 rounded-lg border-l-4 ${stats.status.bgColor} ${stats.status.borderColor}`}>
-                <div className={`text-sm font-medium ${stats.status.color}`}>Average Confidence</div>
-                <div className={`text-2xl font-bold ${stats.status.color}`}>{(stats.averageConfidence * 100).toFixed(1)}%</div>
+              <div className={`p-3 sm:p-4 rounded-lg border-l-4 ${stats.status.bgColor} ${stats.status.borderColor}`}>
+                <div className={`text-xs sm:text-sm font-medium ${stats.status.color}`}>Avg Confidence</div>
+                <div className={`text-xl sm:text-2xl font-bold ${stats.status.color}`}>{(stats.averageConfidence * 100).toFixed(1)}%</div>
                 <div className={`text-xs ${stats.status.color}`}>Detection accuracy</div>
               </div>
-              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
-                <div className="text-sm text-yellow-600 font-medium">Confidence Range</div>
-                <div className="text-2xl font-bold text-yellow-900">
-                  {(stats.minConfidence * 100).toFixed(1)}% - {(stats.maxConfidence * 100).toFixed(1)}%
+              <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg border-l-4 border-yellow-500">
+                <div className="text-xs sm:text-sm text-yellow-600 font-medium">Confidence Range</div>
+                <div className="text-base sm:text-xl font-bold text-yellow-900">
+                  {(stats.minConfidence * 100).toFixed(0)}%–{(stats.maxConfidence * 100).toFixed(0)}%
                 </div>
-                <div className="text-xs text-yellow-600">Min - Max</div>
+                <div className="text-xs text-yellow-600">Min – Max</div>
               </div>
-              <div className={`p-4 rounded-lg border-l-4 ${stats.status.bgColor} ${stats.status.borderColor}`}>
-                <div className={`text-sm font-medium ${stats.status.color}`}>Current Status</div>
-                <div className={`text-lg font-bold px-3 py-1 rounded-full text-center ${stats.status.color} ${stats.status.bgColor} border ${stats.status.borderColor}`}>
+              <div className={`p-3 sm:p-4 rounded-lg border-l-4 ${stats.status.bgColor} ${stats.status.borderColor}`}>
+                <div className={`text-xs sm:text-sm font-medium ${stats.status.color}`}>Current Status</div>
+                <div className={`text-sm font-bold px-2 py-1 rounded-full text-center ${stats.status.color} ${stats.status.bgColor} border ${stats.status.borderColor} mt-1`}>
                   {stats.status.status}
                 </div>
                 <div className={`text-xs mt-1 ${stats.status.color}`}>Risk level</div>
@@ -311,16 +309,16 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
 
         {/* Location Details */}
         {areaResults.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <MapPin className="h-5 w-5 mr-2 text-green-600" />
+          <div className="mb-5 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <MapPin className="h-5 w-5 mr-2 text-green-600 flex-shrink-0" />
               Location Details
             </h3>
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Primary Detection Location</h4>
-                  <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                  <p className="text-sm text-gray-700 leading-relaxed mb-4 break-words">
                     {areaResults[0]?.address || 'Address not available'}
                   </p>
                   <div className="space-y-2">
@@ -347,7 +345,7 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                   </div>
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <h4 className="font-medium text-gray-900">Recent Detection Events</h4>
                     {totalPages > 1 && (
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
@@ -360,12 +358,12 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                       const resultStatus = getStatusFromConfidence(result.confidence_score);
                       const globalIndex = startIndex + index;
                       return (
-                        <div key={result.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                          <div>
+                        <div key={result.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-white rounded-lg border gap-2">
+                          <div className="min-w-0">
                             <p className="text-sm font-medium text-gray-900">Detection #{globalIndex + 1}</p>
                             <p className="text-xs text-gray-500">{formatTimestamp(result.timestamp)}</p>
                           </div>
-                          <div className="text-right">
+                          <div className="flex sm:flex-col sm:text-right items-center gap-2 flex-shrink-0">
                             <span className="text-sm font-medium text-gray-900">
                               {(result.confidence_score * 100).toFixed(1)}%
                             </span>
@@ -380,22 +378,22 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                   
                   {/* Pagination Controls */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 gap-2">
                       <button
                         onClick={handlePreviousPage}
                         disabled={currentPage === 1}
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="h-4 w-4 mr-1" />
-                        Previous
+                        Prev
                       </button>
                       
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-1 overflow-x-auto">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                            className={`px-2 sm:px-3 py-2 text-sm font-medium rounded-lg flex-shrink-0 ${
                               currentPage === page
                                 ? 'bg-green-600 text-white'
                                 : 'text-gray-500 hover:bg-gray-100'
@@ -409,7 +407,7 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                       <button
                         onClick={handleNextPage}
                         disabled={currentPage === totalPages}
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                         <ChevronRight className="h-4 w-4 ml-1" />

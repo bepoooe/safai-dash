@@ -133,11 +133,11 @@ export default function SafaiKarmiModal({
   // const isEditMode = mode === 'edit';
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
+      <div className="relative mx-auto my-4 sm:my-8 max-w-lg shadow-lg rounded-md bg-white">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-medium text-gray-900">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900">
             {mode === 'add' && 'Add New Safai Karmi'}
             {mode === 'edit' && 'Edit Safai Karmi'}
             {mode === 'view' && 'Safai Karmi Details'}
@@ -151,7 +151,7 @@ export default function SafaiKarmiModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 p-4 sm:p-5 max-h-[75vh] overflow-y-auto">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -316,11 +316,11 @@ export default function SafaiKarmiModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-[#ded5c5]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 border border-[#ded5c5] rounded-xl shadow-xs text-sm font-semibold text-[#4a3b32] bg-[#ded8c4]/60 hover:bg-[#ded8c4] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#964b28]"
             >
               {isViewMode ? 'Close' : 'Cancel'}
             </button>
@@ -328,7 +328,7 @@ export default function SafaiKarmiModal({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-[#964b28] hover:bg-[#7e3e1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#964b28] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {isSubmitting ? 'Saving...' : (mode === 'add' ? 'Add Safai Karmi' : 'Update Safai Karmi')}

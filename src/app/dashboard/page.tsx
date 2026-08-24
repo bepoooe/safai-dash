@@ -476,77 +476,74 @@ export default function DashboardPage() {
     }
   };
 
-
   return (
-    <div className="space-y-7">
+    <div className="space-y-5 sm:space-y-7">
       {/* Page header */}
-      <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Garbage Overflow Detection Dashboard</h1>
-        <p className="mt-1 text-sm font-medium text-slate-600">
+      <div className="rounded-2xl border border-[#ded5c5] bg-white/95 px-4 py-4 sm:px-6 sm:py-5 shadow-sm">
+        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#1f1712]">Garbage Overflow Detection Dashboard</h1>
+        <p className="mt-1 text-sm font-medium text-[#6b5c4e]">
           Monitor garbage overflow detection and track waste management performance.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Total Detections</p>
-          <p className="mt-2 text-3xl font-black text-slate-900">{recentActivities.length}</p>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <div className="rounded-2xl border border-[#ded5c5] bg-[#fdfbf7] p-4 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#964b28]">Total Detections</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black text-[#1f1712]">{recentActivities.length}</p>
         </div>
-        <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Average Confidence</p>
-          <p className="mt-2 text-3xl font-black text-slate-900">{averageConfidencePercent}%</p>
+        <div className="rounded-2xl border border-[#ded5c5] bg-[#fdfbf7] p-4 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#594d3b]">Avg Confidence</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black text-[#1f1712]">{averageConfidencePercent}%</p>
         </div>
-        <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">High Risk Events</p>
-          <p className="mt-2 text-3xl font-black text-slate-900">{highRiskEvents}</p>
+        <div className="rounded-2xl border border-[#ded5c5] bg-[#fdfbf7] p-4 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#ba7861]">High Risk Events</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black text-[#1f1712]">{highRiskEvents}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Report Pages</p>
-          <p className="mt-2 text-3xl font-black text-slate-900">{Math.max(totalPages, 1)}</p>
+        <div className="rounded-2xl border border-[#ded5c5] bg-[#fdfbf7] p-4 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#7a6a58]">Report Pages</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black text-[#1f1712]">{Math.max(totalPages, 1)}</p>
         </div>
       </div>
 
-
       {/* Official Detection Report */}
-      <div ref={reportRef} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
+      <div ref={reportRef} className="overflow-hidden rounded-2xl border border-[#ded5c5] bg-white/95 shadow-lg shadow-[#964b28]/5">
         {/* Report Header */}
-        <div className="bg-gradient-to-r from-blue-700 to-blue-600 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <FileText className="h-8 w-8 text-white" />
-              <div>
-                <h2 className="text-xl font-bold text-white">Garbage Overflow Detection Report</h2>
-                <p className="text-sm text-blue-100">Generated on {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+        <div className="bg-gradient-to-r from-[#8a4220] to-[#ba7861] px-4 py-4 sm:px-6">
+          <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 min-w-0">
+              <FileText className="h-7 w-7 sm:h-8 sm:w-8 text-white flex-shrink-0" />
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-xl font-bold text-white leading-tight">Garbage Overflow Detection Report</h2>
+                <p className="text-xs sm:text-sm text-amber-100 mt-0.5 truncate">Generated on {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex-shrink-0">
               <button 
                 onClick={handleExportPDF}
-                className="rounded-lg bg-white/20 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/30"
+                className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/30"
               >
-                <Download className="h-4 w-4 inline mr-1" />
+                <Download className="h-4 w-4" />
                 Export PDF
               </button>
             </div>
           </div>
         </div>
 
-        <div className="p-6">
-
+        <div className="p-4 sm:p-6">
           {/* Location Intelligence */}
-          <LocationIntelligence className="mb-8" />
-
+          <LocationIntelligence className="mb-6 sm:mb-8" />
 
           {/* Detection Analytics */}
-          <div className="mb-8">
-            <h3 className="mb-4 flex items-center text-lg font-bold text-slate-900">
-              <Activity className="mr-2 h-5 w-5 text-blue-600" />
+          <div className="mb-6 sm:mb-8">
+            <h3 className="mb-4 flex items-center text-base sm:text-lg font-bold text-[#1f1712]">
+              <Activity className="mr-2 h-5 w-5 text-[#964b28] flex-shrink-0" />
               Detection Analytics
             </h3>
-            <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-slate-900">Recent Detection Events</h4>
-                  <div className="flex items-center space-x-2 text-sm font-medium text-slate-600">
+            <div className="rounded-xl border border-[#ded5c5] bg-[#fdfbf7] p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <h4 className="font-bold text-[#1f1712]">Recent Detection Events</h4>
+                  <div className="flex items-center space-x-2 text-sm font-medium text-[#7a6a58]">
                     <span>Page {currentPage} of {totalPages}</span>
                   </div>
                 </div>
@@ -557,12 +554,12 @@ export default function DashboardPage() {
                         <div key={i} className="animate-pulse">
                           <div className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm">
                             <div className="flex-1">
-                              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                              <div className="h-4 bg-[#e8e2d4] rounded w-3/4 mb-2"></div>
+                              <div className="h-3 bg-[#e8e2d4] rounded w-1/2"></div>
                             </div>
-                            <div className="text-right">
-                              <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
-                              <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="text-right ml-3">
+                              <div className="h-4 bg-[#e8e2d4] rounded w-16 mb-1"></div>
+                              <div className="h-3 bg-[#e8e2d4] rounded w-20"></div>
                             </div>
                           </div>
                         </div>
@@ -575,26 +572,26 @@ export default function DashboardPage() {
                     </div>
                   ) : currentEvents.length === 0 ? (
                     <div className="py-4 text-center">
-                      <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm font-medium text-slate-500">No detection events found</p>
+                      <CheckCircle className="h-8 w-8 text-[#9c8e7e] mx-auto mb-2" />
+                      <p className="text-sm font-medium text-[#7a6a58]">No detection events found</p>
                     </div>
                   ) : (
                     currentEvents.map((activity, index) => {
                       const status = getStatusFromConfidence(activity.confidence_score);
                       const globalIndex = startIndex + index;
                       return (
-                        <div key={activity.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">
+                        <div key={activity.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-lg border border-[#ded5c5] bg-white p-3 shadow-sm gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-[#1f1712] break-words">
                               Detection #{globalIndex + 1} - {activity.address}
                             </p>
-                            <p className="text-xs font-medium text-slate-500">{formatTimeAgo(activity.timestamp)}</p>
+                            <p className="text-xs font-medium text-[#7a6a58]">{formatTimeAgo(activity.timestamp)}</p>
                           </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-slate-900">
+                          <div className="flex sm:flex-col sm:text-right items-center sm:items-end gap-2 flex-shrink-0">
+                            <span className="text-sm font-bold text-[#1f1712]">
                               {(activity.confidence_score * 100).toFixed(1)}%
                             </span>
-                            <p className={`mt-1 rounded-full px-2 py-1 text-xs font-semibold ${status.color} ${status.bgColor}`}>
+                            <p className={`rounded-full px-2 py-1 text-xs font-semibold ${status.color} ${status.bgColor}`}>
                               {status.status}
                             </p>
                           </div>
@@ -606,25 +603,25 @@ export default function DashboardPage() {
                 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
+                  <div className="mt-4 flex items-center justify-between border-t border-[#ded5c5] pt-4 gap-2">
                     <button
                       onClick={handlePreviousPage}
                       disabled={currentPage === 1}
-                      className="flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex items-center rounded-lg border border-[#ded5c5] bg-white px-2.5 py-2 text-sm font-semibold text-[#4a3b32] hover:bg-[#fdfbf7] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      Previous
+                      Prev
                     </button>
                     
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1 overflow-x-auto">
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                          className={`px-3 py-2 text-sm font-semibold rounded-lg flex-shrink-0 ${
                             currentPage === page
-                              ? 'bg-blue-600 text-white'
-                              : 'text-slate-600 hover:bg-slate-100'
+                              ? 'bg-[#964b28] text-white'
+                              : 'text-[#594d3b] hover:bg-[#f5ede2]'
                           }`}
                         >
                           {page}
@@ -635,7 +632,7 @@ export default function DashboardPage() {
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className="flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex items-center rounded-lg border border-[#ded5c5] bg-white px-2.5 py-2 text-sm font-semibold text-[#4a3b32] hover:bg-[#fdfbf7] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Next
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -646,31 +643,31 @@ export default function DashboardPage() {
           </div>
 
           {/* Recommendations */}
-          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-6">
-            <h3 className="mb-4 flex items-center text-lg font-bold text-slate-900">
-              <AlertTriangle className="mr-2 h-5 w-5 text-amber-600" />
+          <div className="rounded-xl border border-[#ded4c5] bg-[#ded8c4]/50 p-4 sm:p-6">
+            <h3 className="mb-4 flex items-center text-base sm:text-lg font-bold text-[#1f1712]">
+              <AlertTriangle className="mr-2 h-5 w-5 text-[#964b28] flex-shrink-0" />
               Recommendations
             </h3>
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CheckCircle className="h-5 w-5 text-[#964b28] mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">Schedule Collection</p>
-                  <p className="text-sm text-slate-700">Plan immediate collection for the detected overflow area</p>
+                  <p className="text-sm font-bold text-[#1f1712]">Schedule Collection</p>
+                  <p className="text-sm text-[#4f4236]">Plan immediate collection for the detected overflow area</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CheckCircle className="h-5 w-5 text-[#964b28] mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">Monitor Confidence Trend</p>
-                  <p className="text-sm text-slate-700">Confidence increased from 32.92% to 46.97% - continue monitoring</p>
+                  <p className="text-sm font-bold text-[#1f1712]">Monitor Confidence Trend</p>
+                  <p className="text-sm text-[#4f4236]">Confidence increased from 32.92% to 46.97% - continue monitoring</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CheckCircle className="h-5 w-5 text-[#964b28] mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">Update Collection Routes</p>
-                  <p className="text-sm text-slate-700">Include this location in regular collection schedule</p>
+                  <p className="text-sm font-bold text-[#1f1712]">Update Collection Routes</p>
+                  <p className="text-sm text-[#4f4236]">Include this location in regular collection schedule</p>
                 </div>
               </div>
             </div>
@@ -678,175 +675,171 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Charts and activities */}
-      <div className="grid grid-cols-1 gap-6">
-
-        {/* Recent activities */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/50">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900">Recent Detection Activities</h3>
-            <Calendar className="h-5 w-5 text-slate-400" />
-          </div>
-          <div className="flow-root">
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="relative flex space-x-3">
-                      <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
+      {/* Recent activities */}
+      <div className="rounded-2xl border border-[#ded5c5] bg-white/95 p-4 sm:p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base sm:text-lg font-bold text-[#1f1712]">Recent Detection Activities</h3>
+          <Calendar className="h-5 w-5 text-[#9c8e7e] flex-shrink-0" />
+        </div>
+        <div className="flow-root">
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="relative flex space-x-3">
+                    <div className="h-8 w-8 bg-[#e8e2d4] rounded-full flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-[#e8e2d4] rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-[#e8e2d4] rounded w-1/2"></div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : _error ? (
-              <div className="py-8 text-center">
-                <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                <p className="font-medium text-red-700">{_error}</p>
-              </div>
-            ) : recentActivities.length === 0 ? (
-              <div className="py-8 text-center">
-                <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="font-medium text-slate-500">No recent activities found</p>
-              </div>
-            ) : (
-              <ul className="-mb-8">
-                {recentActivities.slice(0, 4).map((activity, activityIdx) => {
-                  const status = getStatusFromConfidence(activity.confidence_score);
-                  const getIcon = () => {
-                    if (status.status.includes('HIGH')) return AlertTriangle;
-                    if (status.status.includes('MEDIUM')) return Activity;
-                    return CheckCircle;
-                  };
-                  const Icon = getIcon();
-                  
-                  return (
-                    <li key={activity.id}>
-                      <div className="relative pb-8">
-                        {activityIdx !== Math.min(recentActivities.length - 1, 3) ? (
+                </div>
+              ))}
+            </div>
+          ) : _error ? (
+            <div className="py-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <p className="font-medium text-red-700">{_error}</p>
+            </div>
+          ) : recentActivities.length === 0 ? (
+            <div className="py-8 text-center">
+              <CheckCircle className="h-12 w-12 text-[#9c8e7e] mx-auto mb-4" />
+              <p className="font-medium text-[#7a6a58]">No recent activities found</p>
+            </div>
+          ) : (
+            <ul className="-mb-8">
+              {recentActivities.slice(0, 4).map((activity, activityIdx) => {
+                const status = getStatusFromConfidence(activity.confidence_score);
+                const getIcon = () => {
+                  if (status.status.includes('HIGH')) return AlertTriangle;
+                  if (status.status.includes('MEDIUM')) return Activity;
+                  return CheckCircle;
+                };
+                const Icon = getIcon();
+                
+                return (
+                  <li key={activity.id}>
+                    <div className="relative pb-8">
+                      {activityIdx !== Math.min(recentActivities.length - 1, 3) ? (
+                        <span
+                          className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-[#e8e2d4]"
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      <div className="relative flex space-x-3">
+                        <div className="flex-shrink-0">
                           <span
-                            className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
-                            aria-hidden="true"
-                          />
-                        ) : null}
-                        <div className="relative flex space-x-3">
-                          <div>
-                            <span
-                              className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${
-                                status.color
-                              }`}
-                            >
-                              <Icon className="h-4 w-4" />
-                            </span>
+                            className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${
+                              status.color
+                            }`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1 pt-1.5 flex flex-col sm:flex-row sm:justify-between gap-1">
+                          <div className="min-w-0">
+                            <p className="text-sm text-[#4f4236] break-words">
+                              <span className="font-bold text-[#1f1712]">
+                                {activity.address}
+                              </span>{' '}
+                              Garbage overflow detected
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <span className="text-xs font-medium text-[#7a6a58]">
+                                Confidence: {(activity.confidence_score * 100).toFixed(1)}%
+                              </span>
+                              <span className={`rounded-full px-2 py-1 text-xs font-semibold ${status.color} ${status.bgColor}`}>
+                                {status.status}
+                              </span>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                            <div>
-                              <p className="text-sm text-slate-600">
-                                <span className="font-semibold text-slate-900">
-                                  {activity.address}
-                                </span>{' '}
-                                Garbage overflow detected
-                              </p>
-                              <div className="flex items-center space-x-2 mt-1">
-                                <span className="text-xs font-medium text-slate-500">
-                                  Confidence: {(activity.confidence_score * 100).toFixed(1)}%
-                                </span>
-                                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${status.color} ${status.bgColor}`}>
-                                  {status.status}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="whitespace-nowrap text-right text-sm font-medium text-slate-500">
-                              {formatTimeAgo(activity.timestamp)}
-                            </div>
+                          <div className="flex-shrink-0 text-sm font-semibold text-[#7a6a58] whitespace-nowrap">
+                            {formatTimeAgo(activity.timestamp)}
                           </div>
                         </div>
                       </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
 
       {/* Quick actions */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/50">
-        <h3 className="mb-4 text-lg font-bold text-slate-900">Quick Actions</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
-            <div>
-              <span className="inline-flex rounded-lg bg-blue-50 p-3 text-blue-700 ring-4 ring-white">
+      <div className="rounded-2xl border border-[#ded5c5] bg-white/95 p-4 sm:p-6 shadow-sm">
+        <h3 className="mb-4 text-base sm:text-lg font-bold text-[#1f1712]">Quick Actions</h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <button className="group relative rounded-xl border border-[#ded5c5] bg-[#fdfbf7] p-4 sm:p-6 transition hover:-translate-y-0.5 hover:border-[#964b28] hover:shadow-md focus-within:ring-2 focus-within:ring-[#964b28] focus-within:ring-offset-2 text-left">
+            <div className="flex sm:block items-center gap-4">
+              <span className="inline-flex rounded-lg bg-[#f0e2d8] p-3 text-[#964b28] ring-4 ring-white flex-shrink-0">
                 <Truck className="h-6 w-6" />
               </span>
-            </div>
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-slate-900">
-                <span className="absolute inset-0" aria-hidden="true" />
-                Schedule Collection
-              </h3>
-              <p className="mt-2 text-sm font-medium text-slate-600">
-                Plan collection for overflow areas
-              </p>
+              <div className="sm:mt-8">
+                <h3 className="text-base sm:text-lg font-bold text-[#1f1712]">
+                  <span className="absolute inset-0" aria-hidden="true" />
+                  Schedule Collection
+                </h3>
+                <p className="mt-1 text-sm font-medium text-[#6b5c4e]">
+                  Plan collection for overflow areas
+                </p>
+              </div>
             </div>
           </button>
 
-          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2">
-            <div>
-              <span className="inline-flex rounded-lg bg-emerald-50 p-3 text-emerald-700 ring-4 ring-white">
+          <button className="group relative rounded-xl border border-[#ded5c5] bg-[#fdfbf7] p-4 sm:p-6 transition hover:-translate-y-0.5 hover:border-[#964b28] hover:shadow-md focus-within:ring-2 focus-within:ring-[#964b28] focus-within:ring-offset-2 text-left">
+            <div className="flex sm:block items-center gap-4">
+              <span className="inline-flex rounded-lg bg-[#e8e2d4] p-3 text-[#594d3b] ring-4 ring-white flex-shrink-0">
                 <Recycle className="h-6 w-6" />
               </span>
-            </div>
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-slate-900">
-                <span className="absolute inset-0" aria-hidden="true" />
-                Detection Report
-              </h3>
-              <p className="mt-2 text-sm font-medium text-slate-600">
-                Generate overflow detection report
-              </p>
+              <div className="sm:mt-8">
+                <h3 className="text-base sm:text-lg font-bold text-[#1f1712]">
+                  <span className="absolute inset-0" aria-hidden="true" />
+                  Detection Report
+                </h3>
+                <p className="mt-1 text-sm font-medium text-[#6b5c4e]">
+                  Generate overflow detection report
+                </p>
+              </div>
             </div>
           </button>
 
-          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2">
-            <div>
-              <span className="inline-flex rounded-lg bg-amber-50 p-3 text-amber-700 ring-4 ring-white">
+          <button className="group relative rounded-xl border border-[#ded5c5] bg-[#fdfbf7] p-4 sm:p-6 transition hover:-translate-y-0.5 hover:border-[#964b28] hover:shadow-md focus-within:ring-2 focus-within:ring-[#964b28] focus-within:ring-offset-2 text-left">
+            <div className="flex sm:block items-center gap-4">
+              <span className="inline-flex rounded-lg bg-[#f0e2d8] p-3 text-[#964b28] ring-4 ring-white flex-shrink-0">
                 <MapPin className="h-6 w-6" />
               </span>
-            </div>
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-slate-900">
-                <span className="absolute inset-0" aria-hidden="true" />
-                View Heatmap
-              </h3>
-              <p className="mt-2 text-sm font-medium text-slate-600">
-                Check overflow locations on map
-              </p>
+              <div className="sm:mt-8">
+                <h3 className="text-base sm:text-lg font-bold text-[#1f1712]">
+                  <span className="absolute inset-0" aria-hidden="true" />
+                  View Heatmap
+                </h3>
+                <p className="mt-1 text-sm font-medium text-[#6b5c4e]">
+                  Check overflow locations on map
+                </p>
+              </div>
             </div>
           </button>
 
-          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md focus-within:ring-2 focus-within:ring-red-500 focus-within:ring-offset-2">
-            <div>
-              <span className="inline-flex rounded-lg bg-red-50 p-3 text-red-700 ring-4 ring-white">
+          <button className="group relative rounded-xl border border-[#ded5c5] bg-[#fdfbf7] p-4 sm:p-6 transition hover:-translate-y-0.5 hover:border-[#964b28] hover:shadow-md focus-within:ring-2 focus-within:ring-[#964b28] focus-within:ring-offset-2 text-left">
+            <div className="flex sm:block items-center gap-4">
+              <span className="inline-flex rounded-lg bg-[#eddcd2] p-3 text-[#ba7861] ring-4 ring-white flex-shrink-0">
                 <AlertTriangle className="h-6 w-6" />
               </span>
-            </div>
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-slate-900">
-                <span className="absolute inset-0" aria-hidden="true" />
-                Alert Management
-              </h3>
-              <p className="mt-2 text-sm font-medium text-slate-600">
-                Manage overflow alerts
-              </p>
+              <div className="sm:mt-8">
+                <h3 className="text-base sm:text-lg font-bold text-[#1f1712]">
+                  <span className="absolute inset-0" aria-hidden="true" />
+                  Alert Management
+                </h3>
+                <p className="mt-1 text-sm font-medium text-[#6b5c4e]">
+                  Manage overflow alerts
+                </p>
+              </div>
             </div>
           </button>
         </div>
       </div>
     </div>
   );
-}
+}

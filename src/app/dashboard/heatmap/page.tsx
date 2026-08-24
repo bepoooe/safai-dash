@@ -234,14 +234,14 @@ export default function HeatmapPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Garbage Detection Heatmap</h1>
-          <p className="text-gray-600 mt-1">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Garbage Detection Heatmap</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
             Live garbage detection intensity map with automated database cleanup (auto-updates every 30s)
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
           <button
             onClick={async () => {
               try {
@@ -274,18 +274,18 @@ export default function HeatmapPage() {
               }
             }}
             disabled={isLoading}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-[#ba7861] text-white rounded-lg hover:bg-[#a6644f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium shadow-sm"
           >
-            <Trash2 className="h-4 w-4" />
-            <span>Clean Database</span>
+            <Trash2 className="h-4 w-4 flex-shrink-0" />
+            <span>Clean DB</span>
           </button>
           <button
             onClick={refreshData}
             disabled={isLoading}
-            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-[#964b28] text-white rounded-lg hover:bg-[#7e3e1f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium shadow-sm"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh Data</span>
+            <RefreshCw className={`h-4 w-4 flex-shrink-0 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -293,7 +293,7 @@ export default function HeatmapPage() {
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-          <AlertCircle className="h-5 w-5 text-red-600" />
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
           <div>
             <h3 className="text-sm font-medium text-red-800">Error Loading Data</h3>
             <p className="text-sm text-red-700 mt-1">{error}</p>
@@ -303,17 +303,17 @@ export default function HeatmapPage() {
 
       {/* Cleanup Notification */}
       {cleanupNotification.show && (
-        <div className={`border rounded-lg p-4 flex items-center space-x-3 animate-in slide-in-from-top-2 duration-300 ${
+        <div className={`border rounded-lg p-4 flex items-center space-x-3 ${
           cleanupNotification.type === 'success' 
             ? 'bg-green-50 border-green-200' 
             : 'bg-blue-50 border-blue-200'
         }`}>
           {cleanupNotification.type === 'success' ? (
-            <CheckCircle className="h-5 w-5 text-green-600" />
+            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
           ) : (
-            <Trash2 className="h-5 w-5 text-blue-600" />
+            <Trash2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
           )}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 className={`text-sm font-medium ${
               cleanupNotification.type === 'success' ? 'text-green-800' : 'text-blue-800'
             }`}>
@@ -327,7 +327,7 @@ export default function HeatmapPage() {
           </div>
           <button
             onClick={() => setCleanupNotification(prev => ({ ...prev, show: false }))}
-            className={`text-sm font-medium ${
+            className={`flex-shrink-0 text-sm font-medium ${
               cleanupNotification.type === 'success' ? 'text-green-600 hover:text-green-800' : 'text-blue-600 hover:text-blue-800'
             }`}
           >
@@ -337,16 +337,16 @@ export default function HeatmapPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {stats.map((stat) => (
-          <div key={stat.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div key={stat.name} className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-[#ded5c5]">
             <div className="flex items-center">
-              <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              <div className={`p-2 sm:p-3 rounded-lg ${stat.bgColor} flex-shrink-0`}>
+                <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              <div className="ml-3">
+                <p className="text-xs font-medium text-gray-600 leading-tight">{stat.name}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</p>
               </div>
             </div>
           </div>
@@ -354,20 +354,20 @@ export default function HeatmapPage() {
       </div>
 
       {/* Map Container */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Garbage Detection Map</h2>
+      <div className="bg-white rounded-lg shadow-sm border border-[#ded5c5] overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-[#ded5c5]">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Garbage Detection Map</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Last updated: {lastUpdated.toLocaleTimeString()} • {totalDataPoints} active points • {removedCount} areas cleaned
+            Last updated: {lastUpdated.toLocaleTimeString()} · {totalDataPoints} active points · {removedCount} areas cleaned
           </p>
         </div>
         
-        <div className="h-96 w-full relative overflow-hidden rounded-b-lg bg-gray-100">
+        <div className="h-64 sm:h-96 w-full relative overflow-hidden rounded-b-lg bg-gray-100">
           {isLoading ? (
             <div className="h-full flex items-center justify-center bg-gray-50">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading garbage detection data from Firebase...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#964b28] mx-auto"></div>
+                <p className="mt-4 text-gray-600 text-sm">Loading garbage detection data from Firebase...</p>
               </div>
             </div>
           ) : (
@@ -376,7 +376,7 @@ export default function HeatmapPage() {
               {!mapLoaded && (
                 <div className="absolute inset-0 map-loading-overlay flex items-center justify-center z-10 rounded-b-lg">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#964b28] mx-auto"></div>
                     <p className="mt-2 text-sm text-gray-600">Rendering map...</p>
                   </div>
                 </div>
@@ -384,59 +384,59 @@ export default function HeatmapPage() {
               
               <div className="absolute inset-0 bg-gray-100 rounded-b-lg">
                 {/* Map Type Toggle Overlay */}
-                <div className="absolute top-4 right-4 z-20 space-y-2">
+                <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 space-y-2">
                   {/* Map Type Toggle */}
-                  <div className="flex items-center bg-white rounded-lg shadow-lg border border-gray-200 p-1">
+                  <div className="flex items-center bg-white rounded-lg shadow-lg border border-[#ded5c5] p-1">
                     <button
                       onClick={() => setMapType('terrain')}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                      className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md transition-colors ${
                         mapType === 'terrain'
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          ? 'bg-[#964b28] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-[#fdfbf7]'
                       }`}
                     >
-                      <Map className="h-4 w-4" />
-                      <span className="text-sm font-medium">Terrain</span>
+                      <Map className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium">Terrain</span>
                     </button>
                     <button
                       onClick={() => setMapType('satellite')}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                      className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md transition-colors ${
                         mapType === 'satellite'
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          ? 'bg-[#964b28] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-[#fdfbf7]'
                       }`}
                     >
-                      <Satellite className="h-4 w-4" />
-                      <span className="text-sm font-medium">Satellite</span>
+                      <Satellite className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium">Satellite</span>
                     </button>
                     <button
                       onClick={() => {
                         setMapType('satelliteWithLabels');
                         setShowLabels(true);
                       }}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                      className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md transition-colors ${
                         mapType === 'satelliteWithLabels'
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          ? 'bg-[#964b28] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-[#fdfbf7]'
                       }`}
                     >
-                      <Satellite className="h-4 w-4" />
-                      <span className="text-sm font-medium">Hybrid</span>
+                      <Satellite className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium">Hybrid</span>
                     </button>
                   </div>
                   
                   {/* Labels Toggle (only show for satellite view, not hybrid) */}
                   {mapType === 'satellite' && (
-                    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2">
+                    <div className="bg-white rounded-lg shadow-lg border border-[#ded5c5] p-2">
                       <button
                         onClick={() => setShowLabels(!showLabels)}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors w-full ${
+                        className={`flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md transition-colors w-full ${
                           showLabels
-                            ? 'bg-green-600 text-white shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            ? 'bg-[#ba7861] text-white shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-[#fdfbf7]'
                         }`}
                       >
-                        <span className="text-sm font-medium">
+                        <span className="text-xs sm:text-sm font-medium">
                           {showLabels ? 'Hide Labels' : 'Show Labels'}
                         </span>
                       </button>
@@ -501,31 +501,31 @@ export default function HeatmapPage() {
       </div>
 
       {/* Legend */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Detection Intensity Legend</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Detection Intensity Legend</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-red-600 rounded"></div>
-            <span className="text-sm text-gray-600">High (80-100%)</span>
+            <div className="w-4 h-4 bg-red-600 rounded flex-shrink-0"></div>
+            <span className="text-xs sm:text-sm text-gray-600">High (80-100%)</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-orange-600 rounded"></div>
-            <span className="text-sm text-gray-600">Medium-High (60-80%)</span>
+            <div className="w-4 h-4 bg-orange-600 rounded flex-shrink-0"></div>
+            <span className="text-xs sm:text-sm text-gray-600">Med-High (60-80%)</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-amber-500 rounded"></div>
-            <span className="text-sm text-gray-600">Medium (40-60%)</span>
+            <div className="w-4 h-4 bg-amber-500 rounded flex-shrink-0"></div>
+            <span className="text-xs sm:text-sm text-gray-600">Medium (40-60%)</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-lime-500 rounded"></div>
-            <span className="text-sm text-gray-600">Low (20-40%)</span>
+            <div className="w-4 h-4 bg-lime-500 rounded flex-shrink-0"></div>
+            <span className="text-xs sm:text-sm text-gray-600">Low (20-40%)</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-600 rounded"></div>
-            <span className="text-sm text-gray-600">Very Low (0-20%)</span>
+            <div className="w-4 h-4 bg-green-600 rounded flex-shrink-0"></div>
+            <span className="text-xs sm:text-sm text-gray-600">Very Low (0-20%)</span>
           </div>
         </div>
-        <p className="text-sm text-gray-500 mt-3">
+        <p className="text-xs sm:text-sm text-gray-500 mt-3">
           The map shows only active garbage detection points (confidence &gt; 0). 
           When confidence scores become 0 (garbage cleaned), those points are automatically removed from the database.
           Each colored circle represents an active detection area with radius based on GPS accuracy (100-200m).
@@ -545,3 +545,4 @@ export default function HeatmapPage() {
     </div>
   );
 }
+

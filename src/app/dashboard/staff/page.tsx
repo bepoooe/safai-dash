@@ -392,39 +392,39 @@ export default function StaffPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Safai Karmi Management</h1>
-          <p className="text-gray-600 mt-1">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Safai Karmi Management</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
             Manage and monitor waste collection workers across Kolkata
           </p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2 flex-shrink-0">
           {migrationStatus && (
             <button 
               onClick={handleMigrateData}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              className="inline-flex items-center px-3 py-2 sm:px-4 border border-[#ded5c5] text-sm font-medium rounded-md shadow-sm text-[#4a3b32] bg-[#ded8c4] hover:bg-[#d0c6b0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#964b28] disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Migrate Data
+              <RefreshCw className={`h-4 w-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Migrate
             </button>
           )}
           <button 
             onClick={autoAssignWork}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="inline-flex items-center px-3 py-2 sm:px-4 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#ba7861] hover:bg-[#a6644f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ba7861] disabled:opacity-50"
           >
-            <Briefcase className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <Briefcase className={`h-4 w-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
             Assign Work
           </button>
           <button 
             onClick={handleAddKarmi}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="inline-flex items-center px-3 py-2 sm:px-4 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#964b28] hover:bg-[#7e3e1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#964b28] disabled:opacity-50"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Safai Karmi
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+            Add Karmi
           </button>
         </div>
       </div>
@@ -456,14 +456,14 @@ export default function StaffPage() {
 
       {/* Migration Status */}
       {migrationStatus && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div className="bg-[#f0e2d8] border border-[#dfccc1] rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <RefreshCw className="h-5 w-5 text-blue-400" />
+              <RefreshCw className="h-5 w-5 text-[#8a4220]" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">Migration Status</h3>
-              <div className="mt-2 text-sm text-blue-700">
+              <h3 className="text-sm font-bold text-[#8a4220]">Migration Status</h3>
+              <div className="mt-2 text-sm text-[#4a3b32]">
                 <p>{migrationStatus}</p>
               </div>
             </div>
@@ -472,16 +472,16 @@ export default function StaffPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((stat) => (
-          <div key={stat.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div key={stat.name} className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-[#ded5c5]">
             <div className="flex items-center">
-              <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              <div className={`p-2 sm:p-3 rounded-lg ${stat.bgColor} flex-shrink-0`}>
+                <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              <div className="ml-3">
+                <p className="text-xs font-medium text-gray-600 leading-tight">{stat.name}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</p>
               </div>
             </div>
           </div>
@@ -489,7 +489,7 @@ export default function StaffPage() {
       </div>
 
       {/* Search and filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-[#ded5c5]">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -501,7 +501,7 @@ export default function StaffPage() {
                 placeholder="Search by name, ID, or working area..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-[#ded5c5] rounded-md leading-5 bg-[#fdfbf7] placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#964b28] focus:border-[#964b28] sm:text-sm"
               />
             </div>
           </div>
@@ -509,25 +509,25 @@ export default function StaffPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="flex-1 sm:flex-none inline-flex items-center px-3 py-2 border border-[#ded5c5] text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-[#fdfbf7] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#964b28]"
             >
               <option value="All">All Status</option>
               <option value="Active">Active</option>
               <option value="On Leave">On Leave</option>
               <option value="Inactive">Inactive</option>
             </select>
-            <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              <Filter className="h-4 w-4 mr-2" />
-              More Filters
+            <button className="inline-flex items-center px-3 py-2 border border-[#ded5c5] text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-[#fdfbf7] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#964b28]">
+              <Filter className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">More Filters</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Safai Karmis table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
+      {/* Safai Karmis list */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-[#ded5c5]">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#ded5c5]">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900">
             Safai Karmis ({filteredKarmis.length})
           </h3>
         </div>
@@ -539,95 +539,85 @@ export default function StaffPage() {
             <p className="text-gray-500">Please wait while we fetch the latest information.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-[#ded5c5]">
             {filteredKarmis.map((karmi) => (
             <li key={karmi.id}>
-              <div className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-12 w-12">
-                    <div className="h-12 w-12 rounded-full bg-indigo-500 flex items-center justify-center">
-                      <span className="text-sm font-medium text-white">
+              <div className="px-4 sm:px-6 py-4 hover:bg-[#fdfbf7]">
+                <div className="flex items-start gap-3">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0 h-10 w-10 sm:h-12 sm:w-12">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-[#964b28] flex items-center justify-center">
+                      <span className="text-sm font-bold text-white">
                         {karmi.name.split(' ').map(n => n[0]).join('')}
                       </span>
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <div className="flex items-center">
-                      <p className="text-sm font-medium text-gray-900">{karmi.name}</p>
-                      <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(karmi.status)}`}>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                      <p className="text-sm font-bold text-gray-900">{karmi.name}</p>
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(karmi.status)}`}>
                         {karmi.status}
                       </span>
                     </div>
-                    <div className="flex items-center mt-1 space-x-4">
-                      <div className="flex items-center text-sm text-gray-500">
-                        <User className="h-4 w-4 mr-1" />
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mb-2">
+                      <div className="flex items-center">
+                        <User className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                         {karmi.id}
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Phone className="h-4 w-4 mr-1" />
+                      <div className="flex items-center">
+                        <Phone className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                         {karmi.phone}
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <MapPin className="h-4 w-4 mr-1" />
+                      <div className="flex items-center">
+                        <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                         {karmi.workingArea}
                       </div>
                       {(karmi.totalAssignedWork || 0) > 0 && (
-                        <div className="flex items-center text-sm text-indigo-600">
-                          <Briefcase className="h-4 w-4 mr-1" />
+                        <div className="flex items-center text-[#964b28] font-medium">
+                          <Briefcase className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                           {karmi.totalAssignedWork} assigned
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <div className="flex items-center justify-end mb-1">
-                      <span className="text-sm font-medium text-gray-900">
-                        {karmi.totalCollections.toLocaleString()} collections
-                      </span>
-                      <span className={`ml-2 text-sm font-medium ${getRatingColor(karmi.rating)}`}>
-                        ⭐ {karmi.rating}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-end space-x-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                      <span className="font-medium text-gray-900">{karmi.totalCollections.toLocaleString()} collections</span>
+                      <span className={`font-medium ${getRatingColor(karmi.rating)}`}>⭐ {karmi.rating}</span>
                       <span>Last active: {karmi.lastActive}</span>
                       {(karmi.pendingWork || 0) > 0 && (
-                        <span className="text-orange-600 font-medium">
-                          {karmi.pendingWork} pending
-                        </span>
+                        <span className="text-orange-600 font-medium">{karmi.pendingWork} pending</span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">Joined: {new Date(karmi.joinDate).toLocaleDateString()}</p>
                   </div>
-                  <div className="flex space-x-2">
-                    {(karmi.totalAssignedWork || 0) > 0 && (
-                      <button 
-                        onClick={() => handleViewAssignedWork(karmi)}
-                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                      >
-                        View Work
-                      </button>
-                    )}
+                </div>
+                {/* Action buttons */}
+                <div className="flex flex-wrap gap-2 mt-3 pl-0 sm:pl-[60px]">
+                  {(karmi.totalAssignedWork || 0) > 0 && (
                     <button 
-                      onClick={() => handleEditKarmi(karmi)}
-                      className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                      onClick={() => handleViewAssignedWork(karmi)}
+                      className="text-[#964b28] hover:text-[#7e3e1f] text-xs sm:text-sm font-semibold px-2.5 py-1 rounded-md hover:bg-[#f0e2d8]/60 transition-colors"
                     >
-                      Edit
+                      View Work
                     </button>
-                    <button 
-                      onClick={() => handleViewKarmi(karmi)}
-                      className="text-green-600 hover:text-green-900 text-sm font-medium"
-                    >
-                      View Details
-                    </button>
-                    <button 
-                      onClick={() => handleRemoveKarmi(karmi.id)}
-                      className="text-red-600 hover:text-red-900 text-sm font-medium"
-                    >
-                      Remove
-                    </button>
-                  </div>
+                  )}
+                  <button 
+                    onClick={() => handleEditKarmi(karmi)}
+                    className="text-[#ba7861] hover:text-[#a6644f] text-xs sm:text-sm font-semibold px-2.5 py-1 rounded-md hover:bg-[#f0e2d8]/60 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleViewKarmi(karmi)}
+                    className="text-[#594d3b] hover:text-[#3d3326] text-xs sm:text-sm font-semibold px-2.5 py-1 rounded-md hover:bg-[#ded8c4]/50 transition-colors"
+                  >
+                    View
+                  </button>
+                  <button 
+                    onClick={() => handleRemoveKarmi(karmi.id)}
+                    className="text-red-600 hover:text-red-900 text-xs sm:text-sm font-semibold px-2.5 py-1 rounded-md hover:bg-red-50 transition-colors"
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
             </li>
@@ -661,21 +651,21 @@ export default function StaffPage() {
 
       {/* Assigned Work Modal */}
       {showWorkModal && selectedKarmiWork && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-gray-900">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
+          <div className="relative mx-auto my-4 sm:my-8 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-6 p-4 sm:p-5 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">
                 Assigned Work ({selectedKarmiWork.length} tasks)
               </h3>
               <button
                 onClick={handleCloseWorkModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 flex-shrink-0"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto px-4 sm:px-5">
               {selectedKarmiWork.map((work) => (
                 <div key={work.detectionId} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between">
