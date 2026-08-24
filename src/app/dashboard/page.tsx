@@ -118,6 +118,10 @@ export default function DashboardPage() {
   const startIndex = (currentPage - 1) * eventsPerPage;
   const endIndex = startIndex + eventsPerPage;
   const currentEvents = recentActivities.slice(startIndex, endIndex);
+  const highRiskEvents = recentActivities.filter((activity) => activity.confidence_score >= 0.6).length;
+  const averageConfidencePercent = recentActivities.length > 0
+    ? ((recentActivities.reduce((sum, item) => sum + item.confidence_score, 0) / recentActivities.length) * 100).toFixed(1)
+    : '0.0';
   
   const handlePreviousPage = () => {
     setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -474,32 +478,51 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Garbage Overflow Detection Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
+      <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Garbage Overflow Detection Dashboard</h1>
+        <p className="mt-1 text-sm font-medium text-slate-600">
           Monitor garbage overflow detection and track waste management performance.
         </p>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Total Detections</p>
+          <p className="mt-2 text-3xl font-black text-slate-900">{recentActivities.length}</p>
+        </div>
+        <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Average Confidence</p>
+          <p className="mt-2 text-3xl font-black text-slate-900">{averageConfidencePercent}%</p>
+        </div>
+        <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">High Risk Events</p>
+          <p className="mt-2 text-3xl font-black text-slate-900">{highRiskEvents}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Report Pages</p>
+          <p className="mt-2 text-3xl font-black text-slate-900">{Math.max(totalPages, 1)}</p>
+        </div>
+      </div>
+
 
       {/* Official Detection Report */}
-      <div ref={reportRef} className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div ref={reportRef} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
         {/* Report Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+        <div className="bg-gradient-to-r from-blue-700 to-blue-600 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <FileText className="h-8 w-8 text-white" />
               <div>
                 <h2 className="text-xl font-bold text-white">Garbage Overflow Detection Report</h2>
-                <p className="text-blue-100 text-sm">Generated on September 6, 2025 at 18:52:17 IST</p>
+                <p className="text-sm text-blue-100">Generated on {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
               </div>
             </div>
             <div className="flex space-x-2">
               <button 
                 onClick={handleExportPDF}
-                className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="rounded-lg bg-white/20 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/30"
               >
                 <Download className="h-4 w-4 inline mr-1" />
                 Export PDF
@@ -516,14 +539,14 @@ export default function DashboardPage() {
 
           {/* Detection Analytics */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Activity className="h-5 w-5 mr-2 text-purple-600" />
+            <h3 className="mb-4 flex items-center text-lg font-bold text-slate-900">
+              <Activity className="mr-2 h-5 w-5 text-blue-600" />
               Detection Analytics
             </h3>
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium text-gray-900">Recent Detection Events</h4>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <h4 className="font-semibold text-slate-900">Recent Detection Events</h4>
+                  <div className="flex items-center space-x-2 text-sm font-medium text-slate-600">
                     <span>Page {currentPage} of {totalPages}</span>
                   </div>
                 </div>
@@ -532,7 +555,7 @@ export default function DashboardPage() {
                     <div className="space-y-3">
                       {[1, 2].map((i) => (
                         <div key={i} className="animate-pulse">
-                          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm">
                             <div className="flex-1">
                               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                               <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -546,32 +569,32 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   ) : _error ? (
-                    <div className="text-center py-4">
+                    <div className="py-4 text-center">
                       <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                      <p className="text-red-600 text-sm">{_error}</p>
+                      <p className="text-sm font-medium text-red-700">{_error}</p>
                     </div>
                   ) : currentEvents.length === 0 ? (
-                    <div className="text-center py-4">
+                    <div className="py-4 text-center">
                       <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No detection events found</p>
+                      <p className="text-sm font-medium text-slate-500">No detection events found</p>
                     </div>
                   ) : (
                     currentEvents.map((activity, index) => {
                       const status = getStatusFromConfidence(activity.confidence_score);
                       const globalIndex = startIndex + index;
                       return (
-                        <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={activity.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-semibold text-slate-900">
                               Detection #{globalIndex + 1} - {activity.address}
                             </p>
-                            <p className="text-xs text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
+                            <p className="text-xs font-medium text-slate-500">{formatTimeAgo(activity.timestamp)}</p>
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-bold text-slate-900">
                               {(activity.confidence_score * 100).toFixed(1)}%
                             </span>
-                            <p className={`text-xs px-2 py-1 rounded-full ${status.color} ${status.bgColor}`}>
+                            <p className={`mt-1 rounded-full px-2 py-1 text-xs font-semibold ${status.color} ${status.bgColor}`}>
                               {status.status}
                             </p>
                           </div>
@@ -583,11 +606,11 @@ export default function DashboardPage() {
                 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
                     <button
                       onClick={handlePreviousPage}
                       disabled={currentPage === 1}
-                      className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       Previous
@@ -601,7 +624,7 @@ export default function DashboardPage() {
                           className={`px-3 py-2 text-sm font-medium rounded-lg ${
                             currentPage === page
                               ? 'bg-blue-600 text-white'
-                              : 'text-gray-500 hover:bg-gray-100'
+                              : 'text-slate-600 hover:bg-slate-100'
                           }`}
                         >
                           {page}
@@ -612,7 +635,7 @@ export default function DashboardPage() {
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Next
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -623,31 +646,31 @@ export default function DashboardPage() {
           </div>
 
           {/* Recommendations */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2 text-yellow-600" />
+          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-6">
+            <h3 className="mb-4 flex items-center text-lg font-bold text-slate-900">
+              <AlertTriangle className="mr-2 h-5 w-5 text-amber-600" />
               Recommendations
             </h3>
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
                 <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Schedule Collection</p>
-                  <p className="text-sm text-gray-600">Plan immediate collection for the detected overflow area</p>
+                  <p className="text-sm font-semibold text-slate-900">Schedule Collection</p>
+                  <p className="text-sm text-slate-700">Plan immediate collection for the detected overflow area</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Monitor Confidence Trend</p>
-                  <p className="text-sm text-gray-600">Confidence increased from 32.92% to 46.97% - continue monitoring</p>
+                  <p className="text-sm font-semibold text-slate-900">Monitor Confidence Trend</p>
+                  <p className="text-sm text-slate-700">Confidence increased from 32.92% to 46.97% - continue monitoring</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Update Collection Routes</p>
-                  <p className="text-sm text-gray-600">Include this location in regular collection schedule</p>
+                  <p className="text-sm font-semibold text-slate-900">Update Collection Routes</p>
+                  <p className="text-sm text-slate-700">Include this location in regular collection schedule</p>
                 </div>
               </div>
             </div>
@@ -659,10 +682,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6">
 
         {/* Recent activities */}
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Recent Detection Activities</h3>
-            <Calendar className="h-5 w-5 text-gray-400" />
+            <h3 className="text-lg font-bold text-slate-900">Recent Detection Activities</h3>
+            <Calendar className="h-5 w-5 text-slate-400" />
           </div>
           <div className="flow-root">
             {loading ? (
@@ -680,14 +703,14 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : _error ? (
-              <div className="text-center py-8">
+              <div className="py-8 text-center">
                 <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                <p className="text-red-600">{_error}</p>
+                <p className="font-medium text-red-700">{_error}</p>
               </div>
             ) : recentActivities.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="py-8 text-center">
                 <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No recent activities found</p>
+                <p className="font-medium text-slate-500">No recent activities found</p>
               </div>
             ) : (
               <ul className="-mb-8">
@@ -721,22 +744,22 @@ export default function DashboardPage() {
                           </div>
                           <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                             <div>
-                              <p className="text-sm text-gray-500">
-                                <span className="font-medium text-gray-900">
+                              <p className="text-sm text-slate-600">
+                                <span className="font-semibold text-slate-900">
                                   {activity.address}
                                 </span>{' '}
                                 Garbage overflow detected
                               </p>
                               <div className="flex items-center space-x-2 mt-1">
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs font-medium text-slate-500">
                                   Confidence: {(activity.confidence_score * 100).toFixed(1)}%
                                 </span>
-                                <span className={`text-xs px-2 py-1 rounded-full ${status.color} ${status.bgColor}`}>
+                                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${status.color} ${status.bgColor}`}>
                                   {status.status}
                                 </span>
                               </div>
                             </div>
-                            <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                            <div className="whitespace-nowrap text-right text-sm font-medium text-slate-500">
                               {formatTimeAgo(activity.timestamp)}
                             </div>
                           </div>
@@ -752,72 +775,72 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick actions */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/50">
+        <h3 className="mb-4 text-lg font-bold text-slate-900">Quick Actions</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <button className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg border border-gray-200 hover:border-gray-300">
+          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
             <div>
-              <span className="rounded-lg inline-flex p-3 bg-indigo-50 text-indigo-700 ring-4 ring-white">
+              <span className="inline-flex rounded-lg bg-blue-50 p-3 text-blue-700 ring-4 ring-white">
                 <Truck className="h-6 w-6" />
               </span>
             </div>
             <div className="mt-8">
-              <h3 className="text-lg font-medium">
+              <h3 className="text-lg font-semibold text-slate-900">
                 <span className="absolute inset-0" aria-hidden="true" />
                 Schedule Collection
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm font-medium text-slate-600">
                 Plan collection for overflow areas
               </p>
             </div>
           </button>
 
-          <button className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg border border-gray-200 hover:border-gray-300">
+          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2">
             <div>
-              <span className="rounded-lg inline-flex p-3 bg-green-50 text-green-700 ring-4 ring-white">
+              <span className="inline-flex rounded-lg bg-emerald-50 p-3 text-emerald-700 ring-4 ring-white">
                 <Recycle className="h-6 w-6" />
               </span>
             </div>
             <div className="mt-8">
-              <h3 className="text-lg font-medium">
+              <h3 className="text-lg font-semibold text-slate-900">
                 <span className="absolute inset-0" aria-hidden="true" />
                 Detection Report
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm font-medium text-slate-600">
                 Generate overflow detection report
               </p>
             </div>
           </button>
 
-          <button className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg border border-gray-200 hover:border-gray-300">
+          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2">
             <div>
-              <span className="rounded-lg inline-flex p-3 bg-yellow-50 text-yellow-700 ring-4 ring-white">
+              <span className="inline-flex rounded-lg bg-amber-50 p-3 text-amber-700 ring-4 ring-white">
                 <MapPin className="h-6 w-6" />
               </span>
             </div>
             <div className="mt-8">
-              <h3 className="text-lg font-medium">
+              <h3 className="text-lg font-semibold text-slate-900">
                 <span className="absolute inset-0" aria-hidden="true" />
                 View Heatmap
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm font-medium text-slate-600">
                 Check overflow locations on map
               </p>
             </div>
           </button>
 
-          <button className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg border border-gray-200 hover:border-gray-300">
+          <button className="group relative rounded-xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md focus-within:ring-2 focus-within:ring-red-500 focus-within:ring-offset-2">
             <div>
-              <span className="rounded-lg inline-flex p-3 bg-red-50 text-red-700 ring-4 ring-white">
+              <span className="inline-flex rounded-lg bg-red-50 p-3 text-red-700 ring-4 ring-white">
                 <AlertTriangle className="h-6 w-6" />
               </span>
             </div>
             <div className="mt-8">
-              <h3 className="text-lg font-medium">
+              <h3 className="text-lg font-semibold text-slate-900">
                 <span className="absolute inset-0" aria-hidden="true" />
                 Alert Management
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm font-medium text-slate-600">
                 Manage overflow alerts
               </p>
             </div>

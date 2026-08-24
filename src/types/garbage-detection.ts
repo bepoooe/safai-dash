@@ -176,6 +176,9 @@ export interface ModelResult {
   status?: string; // CLEAN, LOW_OVERFLOW, HIGH_OVERFLOW, etc.
   overflow_score?: number;
   total_detections?: number;
+  workStatus?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  assignedAt?: string;
+  updatedAt?: string;
 }
 
 // Raw Firebase document structure

@@ -41,7 +41,10 @@ export class FirebaseService {
           image_url: data.image_url,
           status: detectionSummary.status || 'UNKNOWN',
           overflow_score: detectionSummary.overflow_score || 0,
-          total_detections: detectionSummary.total_detections || 0
+          total_detections: detectionSummary.total_detections || 0,
+          workStatus: data.workStatus,
+          assignedAt: data.assignedAt,
+          updatedAt: data.updatedAt
         });
       });
 
@@ -171,7 +174,11 @@ export class FirebaseService {
             address: address,
             timestamp: data.createdAt || data.timestamp || new Date().toISOString(),
             model_version: data.model_version,
-            image_url: data.image_url
+            image_url: data.image_url,
+            status: data.status,
+            workStatus: data.workStatus,
+            assignedAt: data.assignedAt,
+            updatedAt: data.updatedAt
           });
         }
       });
@@ -236,7 +243,11 @@ export class FirebaseService {
           address: location.address || data.address || 'Unknown Address',
           timestamp: data.createdAt || data.timestamp || new Date().toISOString(),
           model_version: data.model_version,
-          image_url: data.image_url
+          image_url: data.image_url,
+          status: data.status,
+          workStatus: data.workStatus,
+          assignedAt: data.assignedAt,
+          updatedAt: data.updatedAt
         });
       });
 
