@@ -378,11 +378,11 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                   
                   {/* Pagination Controls */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 gap-2">
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#ded5c5] gap-2">
                       <button
                         onClick={handlePreviousPage}
                         disabled={currentPage === 1}
-                        className="flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center px-2.5 sm:px-3 py-2 text-sm font-semibold text-[#4a3b32] bg-white border border-[#ded5c5] rounded-lg hover:bg-[#fdfbf7] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="h-4 w-4 mr-1" />
                         Prev
@@ -393,10 +393,10 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-2 sm:px-3 py-2 text-sm font-medium rounded-lg flex-shrink-0 ${
+                            className={`px-3 py-2 text-sm font-semibold rounded-lg flex-shrink-0 ${
                               currentPage === page
-                                ? 'bg-green-600 text-white'
-                                : 'text-gray-500 hover:bg-gray-100'
+                                ? 'bg-[#964b28] text-white shadow-xs'
+                                : 'text-[#594d3b] hover:bg-[#f5ede2]'
                             }`}
                           >
                             {page}
@@ -407,7 +407,7 @@ export default function LocationIntelligence({ className = '' }: LocationIntelli
                       <button
                         onClick={handleNextPage}
                         disabled={currentPage === totalPages}
-                        className="flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center px-2.5 sm:px-3 py-2 text-sm font-semibold text-[#4a3b32] bg-white border border-[#ded5c5] rounded-lg hover:bg-[#fdfbf7] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                         <ChevronRight className="h-4 w-4 ml-1" />

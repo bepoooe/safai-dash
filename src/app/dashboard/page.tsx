@@ -131,39 +131,70 @@ export default function DashboardPage() {
     setCurrentPage(prev => Math.min(prev + 1, totalPages));
   };
 
+  const [exportingPDF, setExportingPDF] = useState(false);
+
   const handleExportPDF = async () => {
     try {
+      setExportingPDF(true);
       // Dynamic import for html2pdf
       const html2pdf = (await import('html2pdf.js')).default;
       
-      // Calculate real statistics from Firebase data
-      const totalDetections = recentActivities.length;
+      // Fetch fresh, full ecosystem data in parallel
+      const [
+        modelResultsResponse,
+        areasData,
+        staffData,
+        citizenStats
+      ] = await Promise.all([
+        FirebaseService.fetchModelResults().catch(() => ({ results: recentActivities, totalCount: recentActivities.length, averageConfidence: 0, lastUpdated: new Date().toISOString() })),
+        FirebaseService.fetchUniqueAreas().catch(() => []),
+        FirebaseService.fetchStaff().catch(() => []),
+        FirebaseService.getCitizenStats().catch(() => ({ totalCitizens: 0, pendingCitizens: 0, inProgressCitizens: 0, resolvedCitizens: 0, totalReports: 0, verifiedReports: 0, averageReportsPerCitizen: 0 }))
+      ]);
+
+      const allActivities = modelResultsResponse.results.length > 0 ? modelResultsResponse.results : recentActivities;
+      const totalDetections = allActivities.length;
+      
       const averageConfidence = totalDetections > 0 
-        ? recentActivities.reduce((sum, result) => sum + result.confidence_score, 0) / totalDetections
+        ? allActivities.reduce((sum, result) => sum + result.confidence_score, 0) / totalDetections
         : 0;
       const maxConfidence = totalDetections > 0 
-        ? Math.max(...recentActivities.map(r => r.confidence_score))
+        ? Math.max(...allActivities.map(r => r.confidence_score))
         : 0;
       const minConfidence = totalDetections > 0 
-        ? Math.min(...recentActivities.map(r => r.confidence_score))
+        ? Math.min(...allActivities.map(r => r.confidence_score))
         : 0;
       
-      // Calculate overflow score (simplified calculation)
+      const highRiskCount = allActivities.filter(r => r.confidence_score >= 0.6).length;
+      const mediumRiskCount = allActivities.filter(r => r.confidence_score >= 0.4 && r.confidence_score < 0.6).length;
+      const lowRiskCount = allActivities.filter(r => r.confidence_score < 0.4).length;
+
       const overflowScore = totalDetections > 0 
         ? (averageConfidence * 100 * totalDetections) / 100
         : 0;
       
-      // Calculate detection frequency (detections per hour based on time range)
       const now = new Date();
       const oldestDetection = totalDetections > 0 
-        ? new Date(recentActivities[recentActivities.length - 1].timestamp)
+        ? new Date(allActivities[allActivities.length - 1].timestamp)
         : now;
-      const timeDiffHours = (now.getTime() - oldestDetection.getTime()) / (1000 * 60 * 60);
-      const detectionFrequency = timeDiffHours > 0 ? (totalDetections / timeDiffHours).toFixed(1) : '0';
+      const timeDiffHours = Math.max((now.getTime() - oldestDetection.getTime()) / (1000 * 60 * 60), 1);
+      const detectionFrequency = (totalDetections / timeDiffHours).toFixed(1);
       
-      // Get latest detection location
-      const latestDetection = totalDetections > 0 ? recentActivities[0] : null;
+      const latestDetection = totalDetections > 0 ? allActivities[0] : null;
       const latestStatus = latestDetection ? getStatusFromConfidence(latestDetection.confidence_score) : null;
+
+      // Staff metrics
+      const totalStaff = staffData.length;
+      const activeStaff = staffData.filter(s => s.status === 'Active').length;
+      const totalStaffCollections = staffData.reduce((sum, s) => sum + (s.totalCollections || 0), 0);
+
+      // Citizen metrics
+      const totalCitizenReports = citizenStats.totalReports || citizenStats.totalCitizens || 0;
+      const resolvedCitizenReports = citizenStats.resolvedCitizens || 0;
+      const pendingCitizenReports = citizenStats.pendingCitizens || 0;
+      const resolutionRate = totalCitizenReports > 0 
+        ? ((resolvedCitizenReports / totalCitizenReports) * 100).toFixed(1)
+        : '100.0';
       
       // Format timestamp for report
       const reportDate = new Date().toLocaleString('en-IN', {
@@ -175,6 +206,8 @@ export default function DashboardPage() {
         minute: '2-digit',
         second: '2-digit'
       });
+
+      const reportId = `KMC-SAF-${Date.now().toString().slice(-6)}`;
       
       // Create municipal report HTML
       const reportHTML = `
@@ -182,297 +215,412 @@ export default function DashboardPage() {
         <html>
         <head>
           <meta charset="utf-8">
-          <title>Municipal Garbage Overflow Detection Report</title>
+          <title>SafaiSathi Municipal Waste Intelligence Report</title>
           <style>
+            @page {
+              margin: 12mm 15mm;
+              size: A4 portrait;
+            }
             body {
-              font-family: 'Arial', sans-serif;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
               margin: 0;
-              padding: 20px;
-              line-height: 1.6;
-              color: #333;
+              padding: 0;
+              line-height: 1.4;
+              color: #1f1712;
+              background: #fff;
+              font-size: 11px;
             }
-            .header {
-              text-align: center;
-              border-bottom: 3px solid #2563eb;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
-            }
-            .municipality-name {
-              font-size: 24px;
-              font-weight: bold;
-              color: #2563eb;
-              margin-bottom: 5px;
-            }
-            .report-title {
-              font-size: 18px;
-              color: #666;
-              margin-bottom: 10px;
-            }
-            .report-date {
-              font-size: 14px;
-              color: #888;
-            }
-            .section {
-              margin-bottom: 25px;
-            }
-            .section-title {
-              font-size: 16px;
-              font-weight: bold;
-              color: #2563eb;
-              border-bottom: 2px solid #e5e7eb;
-              padding-bottom: 5px;
-              margin-bottom: 15px;
-            }
-            .summary-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 15px;
-              margin-bottom: 20px;
-            }
-            .summary-item {
-              background: #f8fafc;
-              padding: 15px;
-              border-left: 4px solid #2563eb;
-              border-radius: 4px;
-            }
-            .summary-label {
-              font-size: 12px;
-              color: #666;
-              margin-bottom: 5px;
-            }
-            .summary-value {
-              font-size: 18px;
-              font-weight: bold;
-              color: #1f2937;
-            }
-            .location-info {
-              background: #f0f9ff;
-              padding: 20px;
-              border-radius: 8px;
-              margin-bottom: 20px;
-            }
-            .location-address {
-              font-weight: bold;
-              margin-bottom: 10px;
-              color: #1e40af;
-            }
-            .coordinates {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 10px;
-              margin-top: 10px;
-            }
-            .coord-item {
-              font-size: 14px;
-            }
-            .coord-label {
-              color: #666;
-            }
-            .coord-value {
-              font-weight: bold;
-              font-family: monospace;
-            }
-            .detection-events {
-              margin-top: 20px;
-            }
-            .event-item {
-              background: #f9fafb;
-              padding: 15px;
-              margin-bottom: 10px;
-              border-radius: 6px;
-              border-left: 4px solid #10b981;
-            }
-            .event-header {
+            .header-banner {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 5px;
+              border-bottom: 2.5px solid #964b28;
+              padding-bottom: 12px;
+              margin-bottom: 16px;
             }
-            .event-id {
-              font-weight: bold;
-              color: #1f2937;
+            .org-title {
+              font-size: 18px;
+              font-weight: 900;
+              color: #964b28;
+              letter-spacing: -0.5px;
+              margin: 0;
+              text-transform: uppercase;
             }
-            .event-confidence {
-              font-weight: bold;
-              color: #059669;
+            .org-subtitle {
+              font-size: 11px;
+              font-weight: 700;
+              color: #6b5c4e;
+              margin-top: 2px;
             }
-            .event-timestamp {
+            .report-meta {
+              text-align: right;
+              font-size: 10px;
+              color: #7a6a58;
+            }
+            .report-badge {
+              display: inline-block;
+              background: #964b28;
+              color: #fff;
+              font-weight: 700;
+              font-size: 9px;
+              padding: 2px 8px;
+              border-radius: 4px;
+              margin-bottom: 4px;
+            }
+            .section {
+              margin-bottom: 16px;
+              page-break-inside: avoid;
+            }
+            .section-title {
               font-size: 12px;
-              color: #6b7280;
-            }
-            .event-address {
-              font-size: 12px;
-              color: #6b7280;
-              margin-top: 5px;
-            }
-            .recommendations {
-              background: #fef3c7;
-              padding: 20px;
-              border-radius: 8px;
-              border-left: 4px solid #f59e0b;
-            }
-            .recommendation-item {
+              font-weight: 800;
+              color: #241c15;
+              border-left: 3.5px solid #964b28;
+              padding-left: 8px;
               margin-bottom: 10px;
-              padding-left: 20px;
-              position: relative;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
             }
-            .recommendation-item::before {
-              content: "•";
+            .kpi-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 8px;
+              margin-bottom: 14px;
+            }
+            .kpi-card {
+              background: #fdfbf7;
+              border: 1px solid #ded5c5;
+              border-radius: 6px;
+              padding: 10px;
+            }
+            .kpi-label {
+              font-size: 9px;
+              font-weight: 700;
+              color: #7a6a58;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .kpi-value {
+              font-size: 16px;
+              font-weight: 900;
+              color: #1f1712;
+              margin-top: 3px;
+            }
+            .kpi-sub {
+              font-size: 9px;
+              color: #8a7a6c;
+              margin-top: 2px;
+            }
+            .primary-location-card {
+              background: #fdfaf6;
+              border: 1px solid #ded5c5;
+              border-left: 4px solid #ba7861;
+              padding: 10px 12px;
+              border-radius: 6px;
+              margin-bottom: 14px;
+            }
+            .location-title {
+              font-size: 11px;
+              font-weight: 800;
+              color: #8a4220;
+              margin-bottom: 4px;
+            }
+            .location-text {
+              font-size: 11px;
+              font-weight: 600;
+              color: #241c15;
+            }
+            .coords-row {
+              display: flex;
+              gap: 16px;
+              margin-top: 6px;
+              font-size: 10px;
+              color: #6b5c4e;
+            }
+            .coords-row span {
+              font-weight: 700;
+              color: #1f1712;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 6px;
+              font-size: 10px;
+            }
+            th {
+              background: #f4ede4;
+              color: #4a3b32;
+              font-weight: 700;
+              text-align: left;
+              padding: 6px 8px;
+              border: 1px solid #ded5c5;
+              font-size: 9px;
+              text-transform: uppercase;
+            }
+            td {
+              padding: 6px 8px;
+              border: 1px solid #e5dcce;
+              color: #241c15;
+            }
+            tr:nth-child(even) td {
+              background: #faf7f2;
+            }
+            .badge {
+              display: inline-block;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-size: 8.5px;
+              font-weight: 700;
+              text-align: center;
+            }
+            .badge-high { background: #fee2e2; color: #991b1b; }
+            .badge-med { background: #ffedd5; color: #9a3412; }
+            .badge-low { background: #fef9c3; color: #854d0e; }
+            .badge-clean { background: #dcfce7; color: #166534; }
+            .badge-assigned { background: #ede9fe; color: #5b21b6; }
+            .recommendations-box {
+              background: #fdfaf6;
+              border: 1px solid #ded5c5;
+              border-radius: 6px;
+              padding: 10px 14px;
+            }
+            .rec-item {
+              margin-bottom: 6px;
+              padding-left: 14px;
+              position: relative;
+              font-size: 10px;
+              color: #4a3b32;
+            }
+            .rec-item::before {
+              content: "✔";
               position: absolute;
               left: 0;
-              color: #f59e0b;
+              color: #964b28;
               font-weight: bold;
+              font-size: 9px;
             }
-            .footer {
-              margin-top: 40px;
-              text-align: center;
-              font-size: 12px;
-              color: #6b7280;
-              border-top: 1px solid #e5e7eb;
-              padding-top: 20px;
-            }
-            .official-stamp {
-              margin-top: 30px;
-              text-align: right;
+            .footer-sign {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              margin-top: 24px;
+              padding-top: 14px;
+              border-top: 1px solid #ded5c5;
+              page-break-inside: avoid;
             }
             .stamp-box {
-              display: inline-block;
-              border: 2px solid #2563eb;
-              padding: 10px 20px;
-              border-radius: 4px;
-              font-size: 12px;
-              color: #2563eb;
+              border: 2px dashed #964b28;
+              padding: 8px 14px;
+              border-radius: 6px;
+              text-align: center;
+              font-size: 9px;
+              font-weight: 800;
+              color: #964b28;
+              text-transform: uppercase;
+            }
+            .signature-block {
+              text-align: right;
+              font-size: 10px;
+              color: #6b5c4e;
+            }
+            .sig-line {
+              width: 140px;
+              border-bottom: 1px solid #1f1712;
+              margin-bottom: 4px;
+              margin-left: auto;
             }
           </style>
         </head>
         <body>
-          <div class="header">
-            <div class="municipality-name">MUNICIPAL CORPORATION OF KOLKATA</div>
-            <div class="report-title">GARBAGE OVERFLOW DETECTION REPORT</div>
-            <div class="report-date">Report Generated: ${reportDate} IST</div>
+          <div class="header-banner">
+            <div>
+              <div class="report-badge">OFFICIAL MUNICIPAL REPORT</div>
+              <h1 class="org-title">Municipal Corporation of Kolkata</h1>
+              <div class="org-subtitle">SafaiSathi Smart Urban Waste Management & Intelligence Division</div>
+            </div>
+            <div class="report-meta">
+              <div><strong>Ref ID:</strong> ${reportId}</div>
+              <div><strong>Generated:</strong> ${reportDate} IST</div>
+              <div><strong>Classification:</strong> Operational Intelligence</div>
+            </div>
           </div>
 
+          <!-- Executive KPI Metrics -->
           <div class="section">
-            <div class="section-title">EXECUTIVE SUMMARY</div>
-            <div class="summary-grid">
-              <div class="summary-item">
-                <div class="summary-label">Total Detections</div>
-                <div class="summary-value">${totalDetections}</div>
+            <div class="section-title">1. Executive Sanitation KPIs</div>
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Total Detections</div>
+                <div class="kpi-value">${totalDetections}</div>
+                <div class="kpi-sub">${detectionFrequency} detections/hour</div>
               </div>
-              <div class="summary-item">
-                <div class="summary-label">Average Confidence</div>
-                <div class="summary-value">${(averageConfidence * 100).toFixed(1)}%</div>
+              <div class="kpi-card">
+                <div class="kpi-label">Avg AI Confidence</div>
+                <div class="kpi-value">${(averageConfidence * 100).toFixed(1)}%</div>
+                <div class="kpi-sub">Range: ${(minConfidence * 100).toFixed(0)}% – ${(maxConfidence * 100).toFixed(0)}%</div>
               </div>
-              <div class="summary-item">
-                <div class="summary-label">Overflow Score</div>
-                <div class="summary-value">${overflowScore.toFixed(2)}</div>
+              <div class="kpi-card">
+                <div class="kpi-label">High Risk Hotspots</div>
+                <div class="kpi-value" style="color: #991b1b;">${highRiskCount}</div>
+                <div class="kpi-sub">${mediumRiskCount} Moderate, ${lowRiskCount} Minor</div>
               </div>
-              <div class="summary-item">
-                <div class="summary-label">Detection Frequency</div>
-                <div class="summary-value">${detectionFrequency}/hour</div>
+              <div class="kpi-card">
+                <div class="kpi-label">Overflow Index</div>
+                <div class="kpi-value" style="color: #8a4220;">${overflowScore.toFixed(2)}</div>
+                <div class="kpi-sub">Municipal Severity Index</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Workforce Deployed</div>
+                <div class="kpi-value">${activeStaff} / ${totalStaff}</div>
+                <div class="kpi-sub">${totalStaffCollections.toLocaleString()} Total collections</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Citizen Resolution</div>
+                <div class="kpi-value" style="color: #166534;">${resolutionRate}%</div>
+                <div class="kpi-sub">${resolvedCitizenReports} of ${totalCitizenReports} reports resolved</div>
               </div>
             </div>
           </div>
 
+          <!-- Location Intelligence Primary Focus -->
           <div class="section">
-            <div class="section-title">LOCATION INTELLIGENCE</div>
-            <div class="location-info">
-              <div class="location-address">Latest Detection Location</div>
-              <div>${latestDetection ? latestDetection.address : 'No detections available'}</div>
+            <div class="section-title">2. Primary Location Intelligence</div>
+            <div class="primary-location-card">
+              <div class="location-title">Latest Detected Garbage Hotspot</div>
+              <div class="location-text">${latestDetection ? latestDetection.address : 'No active garbage detections recorded in database'}</div>
               ${latestDetection ? `
-              <div class="coordinates">
-                <div class="coord-item">
-                  <span class="coord-label">Latitude:</span>
-                  <span class="coord-value">${latestDetection.latitude.toFixed(6)}°</span>
+                <div class="coords-row">
+                  <div>Latitude: <span>${latestDetection.latitude.toFixed(6)}° N</span></div>
+                  <div>Longitude: <span>${latestDetection.longitude.toFixed(6)}° E</span></div>
+                  <div>GPS Accuracy: <span>${typeof latestDetection.accuracy === 'string' ? latestDetection.accuracy : `±${latestDetection.accuracy}m`}</span></div>
+                  <div>Status: <span class="badge ${latestStatus?.status.includes('HIGH') ? 'badge-high' : latestStatus?.status.includes('MEDIUM') ? 'badge-med' : 'badge-low'}">${latestStatus?.status || 'ACTIVE'}</span></div>
                 </div>
-                <div class="coord-item">
-                  <span class="coord-label">Longitude:</span>
-                  <span class="coord-value">${latestDetection.longitude.toFixed(6)}°</span>
-                </div>
-                <div class="coord-item">
-                  <span class="coord-label">GPS Accuracy:</span>
-                  <span class="coord-value">${typeof latestDetection.accuracy === 'string' ? latestDetection.accuracy : `±${latestDetection.accuracy}m`}</span>
-                </div>
-                <div class="coord-item">
-                  <span class="coord-label">Status:</span>
-                  <span class="coord-value">${latestStatus ? latestStatus.status : 'UNKNOWN'}</span>
-                </div>
-              </div>
               ` : ''}
             </div>
+
+            <!-- Ward Breakdown Table -->
+            ${areasData.length > 0 ? `
+              <div style="margin-top: 10px;">
+                <div style="font-weight: 700; font-size: 10.5px; color: #4a3b32; margin-bottom: 4px;">Ward & Locality Vulnerability Distribution</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width: 45%;">Ward / Locality Name</th>
+                      <th style="width: 15%; text-align: center;">Incidents</th>
+                      <th style="width: 20%; text-align: center;">Risk Level</th>
+                      <th style="width: 20%;">Latest Detection</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${areasData.slice(0, 6).map((area) => {
+                      const riskBadge = area.count >= 4 ? 'badge-high' : area.count >= 2 ? 'badge-med' : 'badge-low';
+                      const riskLabel = area.count >= 4 ? 'HIGH VULNERABILITY' : area.count >= 2 ? 'MODERATE' : 'LOW RISK';
+                      return `
+                        <tr>
+                          <td><strong>${area.area}</strong></td>
+                          <td style="text-align: center; font-weight: bold;">${area.count}</td>
+                          <td style="text-align: center;"><span class="badge ${riskBadge}">${riskLabel}</span></td>
+                          <td>${new Date(area.latestDetection).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : ''}
           </div>
 
+          <!-- Detection Event Logs -->
           <div class="section">
-            <div class="section-title">DETECTION EVENTS</div>
-            <div class="detection-events">
-              ${recentActivities.length > 0 ? recentActivities.map((detection, index) => `
-                <div class="event-item">
-                  <div class="event-header">
-                    <div class="event-id">Detection #${index + 1}</div>
-                    <div class="event-confidence">${(detection.confidence_score * 100).toFixed(1)}%</div>
-                  </div>
-                  <div class="event-timestamp">Timestamp: ${new Date(detection.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</div>
-                  <div class="event-address">Location: ${detection.address}</div>
-                </div>
-              `).join('') : '<div class="event-item"><div class="event-timestamp">No detection events found</div></div>'}
-            </div>
+            <div class="section-title">3. Comprehensive Detection Event Logs</div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 8%;">ID</th>
+                  <th style="width: 36%;">Location Address</th>
+                  <th style="width: 20%;">GPS Coordinates</th>
+                  <th style="width: 12%; text-align: center;">Confidence</th>
+                  <th style="width: 12%; text-align: center;">Status</th>
+                  <th style="width: 12%;">Timestamp (IST)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allActivities.length > 0 ? allActivities.slice(0, 10).map((act, idx) => {
+                  const actStatus = getStatusFromConfidence(act.confidence_score);
+                  const badgeClass = actStatus.status.includes('HIGH') ? 'badge-high' : actStatus.status.includes('MEDIUM') ? 'badge-med' : 'badge-low';
+                  return `
+                    <tr>
+                      <td style="font-weight: bold;">#${idx + 1}</td>
+                      <td>${act.address}</td>
+                      <td style="font-family: monospace; font-size: 9px;">${act.latitude.toFixed(5)}°, ${act.longitude.toFixed(5)}°</td>
+                      <td style="text-align: center; font-weight: bold;">${(act.confidence_score * 100).toFixed(1)}%</td>
+                      <td style="text-align: center;"><span class="badge ${badgeClass}">${actStatus.status.replace(' OVERFLOW', '')}</span></td>
+                      <td style="font-size: 9px;">${new Date(act.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                    </tr>
+                  `;
+                }).join('') : `
+                  <tr>
+                    <td colspan="6" style="text-align: center; padding: 12px; color: #7a6a58;">No detection event logs available.</td>
+                  </tr>
+                `}
+              </tbody>
+            </table>
           </div>
 
+          <!-- Municipal Recommendations -->
           <div class="section">
-            <div class="section-title">RECOMMENDATIONS</div>
-            <div class="recommendations">
+            <div class="section-title">4. Operational Directives & Recommendations</div>
+            <div class="recommendations-box">
               ${totalDetections > 0 ? `
-                <div class="recommendation-item">Schedule immediate collection for detected overflow areas</div>
-                <div class="recommendation-item">Monitor confidence trends - current range: ${(minConfidence * 100).toFixed(1)}% to ${(maxConfidence * 100).toFixed(1)}%</div>
-                <div class="recommendation-item">Include detected locations in regular collection schedule</div>
-                <div class="recommendation-item">Update municipal waste management database with ${totalDetections} new detection point${totalDetections > 1 ? 's' : ''}</div>
-                ${averageConfidence > 0.6 ? '<div class="recommendation-item">High confidence detections require immediate attention</div>' : ''}
-                ${totalDetections > 5 ? '<div class="recommendation-item">Consider increasing collection frequency due to high detection count</div>' : ''}
+                <div class="rec-item">Deploy immediate sanitation team to primary coordinates: <strong>${latestDetection?.address || 'Detected Area'}</strong></div>
+                <div class="rec-item">Prioritize <strong>${highRiskCount} high-risk overflow areas</strong> with dedicated compactor truck dispatch within the next 2 hours.</div>
+                <div class="rec-item">Maintain workforce allocation: <strong>${activeStaff} active Safai Karmis</strong> assigned across high-density wards.</div>
+                <div class="rec-item">Cross-verify resolution with citizen reports (${pendingCitizenReports} pending verifications in progress).</div>
+                <div class="rec-item">Synchronize automated database cleanup schedule every 30 seconds for real-time GIS freshness.</div>
               ` : `
-                <div class="recommendation-item">No detections found - continue regular monitoring</div>
-                <div class="recommendation-item">Review detection system if no alerts received recently</div>
-                <div class="recommendation-item">Maintain current collection schedule</div>
+                <div class="rec-item">All monitored zones are currently within clean tolerance levels. Continue standard surveillance schedule.</div>
+                <div class="rec-item">Maintain routine round-the-clock CCTV AI detection stream active across all municipal wards.</div>
               `}
             </div>
           </div>
 
-          <div class="official-stamp">
+          <!-- Official Sign-off & Verification -->
+          <div class="footer-sign">
             <div class="stamp-box">
-              OFFICIAL REPORT<br>
-              Municipal Corporation of Kolkata<br>
-              Waste Management Department
+              SAFAISATHI VERIFIED<br>
+              <span style="font-size: 8px; font-weight: 500;">Govt of West Bengal / KMC</span>
             </div>
-          </div>
-
-          <div class="footer">
-            <p>This report is generated automatically by the Municipal Garbage Overflow Detection System</p>
-            <p>For queries contact: waste-management@kolkata.gov.in | Phone: +91-33-XXXX-XXXX</p>
+            <div class="signature-block">
+              <div class="sig-line"></div>
+              <div><strong>Chief Sanitation Officer</strong></div>
+              <div>Municipal Solid Waste Management Dept.</div>
+            </div>
           </div>
         </body>
         </html>
       `;
       
       const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
-        filename: `Municipal-Garbage-Report-${new Date().toISOString().split('T')[0]}.pdf`,
+        margin: [0.4, 0.4, 0.4, 0.4],
+        filename: `SafaiSathi-Municipal-Report-${new Date().toISOString().split('T')[0]}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
       
-      // Create a temporary element with the report HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = reportHTML;
       document.body.appendChild(tempDiv);
       
       await html2pdf().set(opt).from(tempDiv).save();
       
-      // Clean up
       document.body.removeChild(tempDiv);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
+    } finally {
+      setExportingPDF(false);
     }
   };
 
@@ -521,10 +669,11 @@ export default function DashboardPage() {
             <div className="flex-shrink-0">
               <button 
                 onClick={handleExportPDF}
-                className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/30"
+                disabled={exportingPDF}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
               >
-                <Download className="h-4 w-4" />
-                Export PDF
+                <Download className={`h-4 w-4 ${exportingPDF ? 'animate-bounce' : ''}`} />
+                {exportingPDF ? 'Generating PDF...' : 'Export PDF'}
               </button>
             </div>
           </div>

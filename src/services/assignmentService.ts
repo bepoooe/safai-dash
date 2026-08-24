@@ -3,6 +3,8 @@ import { db } from '@/lib/firebase';
 import { AssignedWork, SafaiKarmi } from '@/types/staff';
 import { simpleWhatsAppService } from './simpleWhatsAppService';
 
+import { FirebaseService } from './firebaseService';
+
 export class AssignmentService {
   /**
    * Fetch assigned work for a specific staff member
@@ -10,7 +12,6 @@ export class AssignmentService {
   static async getAssignedWorkForStaff(staffId: string): Promise<AssignedWork[]> {
     try {
       const modelResultsRef = collection(db, 'model_results');
-      // Remove orderBy to avoid composite index requirement
       const q = query(
         modelResultsRef,
         where('staffId', '==', staffId)
@@ -20,17 +21,16 @@ export class AssignmentService {
       const assignedWork: AssignedWork[] = [];
       
       querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        const location = data.location || {};
+        const normalized = FirebaseService.normalizeModelResultDoc(doc.id, doc.data());
         
         assignedWork.push({
           detectionId: doc.id,
-          address: location.address || data.address || 'Unknown Address',
-          latitude: location.latitude || data.latitude || 0,
-          longitude: location.longitude || data.longitude || 0,
-          confidenceScore: data.confidence_scores || data.confidence_score || 0,
-          assignedAt: data.assignedAt || data.createdAt || new Date().toISOString(),
-          status: data.workStatus || 'pending'
+          address: normalized.address,
+          latitude: normalized.latitude,
+          longitude: normalized.longitude,
+          confidenceScore: normalized.confidence_score,
+          assignedAt: normalized.assignedAt || normalized.timestamp,
+          status: normalized.workStatus || 'pending'
         });
       });
 

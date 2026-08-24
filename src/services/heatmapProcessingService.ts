@@ -3,21 +3,13 @@
  * Processes model results to handle confidence score changes
  */
 
-import { db } from '@/lib/firebase';
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { FirebaseService } from './firebaseService';
 import { ModelResult } from '@/types/garbage-detection';
 
 export interface ProcessedModelResult extends ModelResult {
   processed?: boolean;
   action?: 'kept' | 'removed' | 'ignored';
 }
-
-/**
- * Check if any confidence score indicates garbage detection
- */
-// function hasGarbageDetected(confidenceScores: number[]): boolean {
-//   return confidenceScores.some(score => score > 0);
-// }
 
 /**
  * Check if two coordinates are within the specified degree threshold
@@ -47,12 +39,9 @@ export class HeatmapProcessingService {
     try {
       console.log('🔄 Processing model results for heatmap...');
       
-      // Get all model results
-      const modelResultsRef = collection(db, 'model_results');
-      const q = query(modelResultsRef, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
+      const { results } = await FirebaseService.fetchModelResults();
       
-      if (snapshot.empty) {
+      if (results.length === 0) {
         console.log('No model results found');
         return [];
       }
@@ -61,29 +50,20 @@ export class HeatmapProcessingService {
       const resultsToRemove: string[] = [];
       
       // Process each result
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const confidenceScores = data.confidence_scores || [];
-        
+      results.forEach((item) => {
         const result: ProcessedModelResult = {
-          id: doc.id,
-          latitude: data.location?.latitude || 0,
-          longitude: data.location?.longitude || 0,
-          address: data.location?.address || '',
-          confidence_score: Math.max(...confidenceScores),
-          accuracy: data.location?.accuracy || '±100 meters',
-          timestamp: data.createdAt || new Date().toISOString(),
+          ...item,
           processed: true
         };
         
-        // If all confidence scores are 0, don't show on heatmap at all
-        if (confidenceScores.every((score: number) => score === 0)) {
+        // If confidence score is 0, don't show on heatmap at all
+        if (item.confidence_score <= 0) {
           result.action = 'ignored';
-          console.log(`🔍 Found cleaned detection: ${doc.id} at ${result.address} - will not show on heatmap`);
+          console.log(`🔍 Found cleaned detection: ${item.id} at ${result.address} - will not show on heatmap`);
           
           // Find nearby detections to remove
           const nearbyResults = allResults.filter(existingResult => 
-            existingResult.id !== doc.id &&
+            existingResult.id !== item.id &&
             isWithinDegreeThreshold(
               result.latitude, 
               result.longitude,
@@ -95,7 +75,6 @@ export class HeatmapProcessingService {
           );
           
           if (nearbyResults.length > 0) {
-            // Find the closest one to remove
             let closestResult = nearbyResults[0];
             let minDistance = Math.sqrt(
               Math.pow(closestResult.latitude - result.latitude, 2) + 
@@ -116,8 +95,6 @@ export class HeatmapProcessingService {
             console.log(`🗑️ Marking for removal: ${closestResult.id} (${minDistance.toFixed(6)} degrees away)`);
             resultsToRemove.push(closestResult.id);
             result.action = 'removed';
-          } else {
-            console.log(`ℹ️ No nearby detections found for ${doc.id}`);
           }
         } else {
           result.action = 'kept';

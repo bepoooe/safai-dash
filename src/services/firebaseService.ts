@@ -7,48 +7,159 @@ import { CloudinaryAnalysis } from '@/types/cloudinary';
 
 export class FirebaseService {
   /**
-   * Fetch all documents from the model_results collection
+   * Helper to extract a clean, human-readable address from various document formats
+   */
+  static extractCleanAddress(data: DocumentData): string {
+    const gpsLocation = data.gps_location || data.location || {};
+    
+    // Candidate address fields in order of preference
+    const candidates = [
+      gpsLocation.address,
+      data.address,
+      data.location_name,
+      data.formatted_address,
+      data.geocoded_address,
+      data.area,
+      data.workingArea,
+      // Composed from location subfields
+      [gpsLocation.road, gpsLocation.suburb || gpsLocation.neighbourhood, gpsLocation.city, gpsLocation.state]
+        .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
+        .join(', '),
+      [data.road, data.suburb || data.neighbourhood, data.city, data.state]
+        .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
+        .join(', ')
+    ];
+
+    for (const candidate of candidates) {
+      if (
+        typeof candidate === 'string' &&
+        candidate.trim().length > 0 &&
+        !candidate.toLowerCase().includes('unknown') &&
+        candidate.trim().toLowerCase() !== 'null' &&
+        candidate.trim().toLowerCase() !== 'undefined'
+      ) {
+        return candidate.trim();
+      }
+    }
+
+    // Fallback: derive coordinate label if valid coordinates exist
+    const latitude = Number(gpsLocation.latitude ?? data.latitude ?? 0) || 0;
+    const longitude = Number(gpsLocation.longitude ?? data.longitude ?? 0) || 0;
+
+    if (latitude !== 0 && longitude !== 0) {
+      return `Kolkata (${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°E)`;
+    }
+
+    return 'Kolkata Metropolitan Area';
+  }
+
+  /**
+   * Normalize any raw model_results Firestore document into a typed ModelResult
+   */
+  static normalizeModelResultDoc(id: string, data: DocumentData): ModelResult {
+    const gpsLocation = data.gps_location || data.location || {};
+    const detectionSummary = data.detection_summary || {};
+
+    const latitude = Number(gpsLocation.latitude ?? data.latitude ?? 0) || 0;
+    const longitude = Number(gpsLocation.longitude ?? data.longitude ?? 0) || 0;
+
+    const address = this.extractCleanAddress(data);
+
+    // Calculate confidence score from multiple possible sources
+    let confidenceScore = 0;
+    if (detectionSummary.average_confidence !== undefined && detectionSummary.average_confidence !== null) {
+      confidenceScore = Number(detectionSummary.average_confidence);
+    } else if (Array.isArray(data.confidence_scores) && data.confidence_scores.length > 0) {
+      const validScores = data.confidence_scores.filter((s: unknown) => typeof s === 'number' && !isNaN(s as number));
+      confidenceScore = validScores.length > 0
+        ? (validScores as number[]).reduce((a, b) => a + b, 0) / validScores.length
+        : 0;
+    } else if (data.confidence_score !== undefined && data.confidence_score !== null) {
+      confidenceScore = Number(data.confidence_score);
+    } else if (data.confidence !== undefined && data.confidence !== null) {
+      confidenceScore = Number(data.confidence);
+    } else if (data.average_confidence !== undefined && data.average_confidence !== null) {
+      confidenceScore = Number(data.average_confidence);
+    }
+
+    if (isNaN(confidenceScore)) confidenceScore = 0;
+
+    // Accuracy
+    let accuracy: number | string = 0;
+    const rawAccuracy = gpsLocation.accuracy ?? data.accuracy;
+    if (typeof rawAccuracy === 'string') {
+      const num = parseFloat(rawAccuracy.replace(/[^\d.]/g, ''));
+      accuracy = !isNaN(num) ? num : rawAccuracy;
+    } else if (typeof rawAccuracy === 'number' && !isNaN(rawAccuracy)) {
+      accuracy = rawAccuracy;
+    }
+
+    // Timestamp
+    let timestamp = new Date().toISOString();
+    const rawTime = data.timestamp ?? data.saved_at ?? data.createdAt ?? data.date ?? data.updatedAt;
+    if (rawTime) {
+      if (typeof rawTime === 'object' && 'toDate' in rawTime && typeof rawTime.toDate === 'function') {
+        timestamp = rawTime.toDate().toISOString();
+      } else if (typeof rawTime === 'object' && typeof rawTime.seconds === 'number') {
+        timestamp = new Date(rawTime.seconds * 1000).toISOString();
+      } else if (typeof rawTime === 'string') {
+        const parsed = new Date(rawTime);
+        if (!isNaN(parsed.getTime())) {
+          timestamp = parsed.toISOString();
+        }
+      } else if (typeof rawTime === 'number') {
+        timestamp = new Date(rawTime).toISOString();
+      }
+    }
+
+    // Status
+    let status = detectionSummary.status || data.status;
+    if (!status || status === 'UNKNOWN') {
+      if (confidenceScore >= 0.8) status = 'HIGH_OVERFLOW';
+      else if (confidenceScore >= 0.6) status = 'MEDIUM-HIGH_OVERFLOW';
+      else if (confidenceScore >= 0.4) status = 'MEDIUM_OVERFLOW';
+      else if (confidenceScore >= 0.2) status = 'LOW_OVERFLOW';
+      else status = 'CLEAN';
+    }
+
+    const overflowScore = Number(detectionSummary.overflow_score ?? data.overflow_score ?? (confidenceScore * 100)) || 0;
+    const totalDetections = Number(detectionSummary.total_detections ?? data.total_detections ?? data.detection_count ?? (confidenceScore > 0 ? 1 : 0)) || 0;
+
+    return {
+      id,
+      latitude,
+      longitude,
+      confidence_score: confidenceScore,
+      accuracy,
+      address,
+      timestamp,
+      model_version: data.source || data.model_version || data.modelVersion || 'YOLOv8-SafaiSaathi',
+      image_url: data.image_url || data.imageUrl || data.image || data.photo_url || data.photoUrl,
+      status,
+      overflow_score: overflowScore,
+      total_detections: totalDetections,
+      workStatus: data.workStatus,
+      assignedAt: data.assignedAt,
+      updatedAt: data.updatedAt
+    };
+  }
+
+  /**
+   * Fetch all documents from the model_results collection safely
    */
   static async fetchModelResults(): Promise<ModelResultsResponse> {
     try {
       const modelResultsRef = collection(db, 'model_results');
-      const q = query(modelResultsRef, orderBy('timestamp', 'desc'));
-      
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(modelResultsRef);
       const results: ModelResult[] = [];
       
       querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        
-        // Extract GPS location object fields
-        const gpsLocation = data.gps_location || {};
-        const detectionSummary = data.detection_summary || {};
-        
-        // Use detection summary for confidence score
-        const confidenceScore = detectionSummary.average_confidence || 0;
-        
-        results.push({
-          id: doc.id,
-          latitude: gpsLocation.latitude || 0,
-          longitude: gpsLocation.longitude || 0,
-          confidence_score: confidenceScore,
-          accuracy: typeof gpsLocation.accuracy === 'string' ? 
-            parseFloat(gpsLocation.accuracy.replace(/[^\d.]/g, '')) : 
-            (gpsLocation.accuracy || 0),
-          address: gpsLocation.address || 'Unknown Address',
-          timestamp: data.timestamp || data.saved_at || new Date().toISOString(),
-          model_version: data.source || 'unknown',
-          image_url: data.image_url,
-          status: detectionSummary.status || 'UNKNOWN',
-          overflow_score: detectionSummary.overflow_score || 0,
-          total_detections: detectionSummary.total_detections || 0,
-          workStatus: data.workStatus,
-          assignedAt: data.assignedAt,
-          updatedAt: data.updatedAt
-        });
+        results.push(this.normalizeModelResultDoc(doc.id, doc.data()));
       });
 
-      // Calculate average confidence
+      // Sort in memory by timestamp descending
+      results.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
       const averageConfidence = results.length > 0 
         ? results.reduce((sum, result) => sum + result.confidence_score, 0) / results.length
         : 0;
@@ -66,41 +177,64 @@ export class FirebaseService {
   }
 
   /**
+   * Extract area name from address string
+   */
+  static extractAreaFromAddress(address: string): string {
+    if (!address || typeof address !== 'string') return 'Kolkata Metropolitan Area';
+    
+    // Split address by comma and take the first meaningful part
+    const parts = address.split(',').map(part => part.trim()).filter(Boolean);
+    
+    const ignorePatterns = [
+      /^india$/i,
+      /^west\s*bengal$/i,
+      /^\d+$/, // Numeric pin codes
+      /^wb$/i,
+      /^kolkata$/i,
+      /^calcutta$/i
+    ];
+    
+    // Look for first part that doesn't match country/state/generic names
+    for (const part of parts) {
+      if (part && !ignorePatterns.some(pattern => pattern.test(part)) && part.length > 2) {
+        return part;
+      }
+    }
+    
+    if (address.includes('(') && address.includes(')')) {
+      return address;
+    }
+    
+    return parts[0] || 'Kolkata Metropolitan Area';
+  }
+
+  /**
    * Fetch unique areas from model results
    */
   static async fetchUniqueAreas(): Promise<AreaData[]> {
     try {
-      const modelResultsRef = collection(db, 'model_results');
-      const q = query(modelResultsRef, orderBy('createdAt', 'desc'));
-      
-      const querySnapshot = await getDocs(q);
+      const { results } = await this.fetchModelResults();
       const areaMap = new Map<string, { count: number; latestDetection: string }>();
       
-      querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        const location = data.location || {};
-        const address = location.address || data.address || 'Unknown Address';
-        
-        // Extract area from address (you can modify this logic based on your address format)
-        const area = this.extractAreaFromAddress(address);
+      results.forEach((item) => {
+        const area = this.extractAreaFromAddress(item.address);
         
         if (areaMap.has(area)) {
           const existing = areaMap.get(area)!;
           areaMap.set(area, {
             count: existing.count + 1,
-            latestDetection: existing.latestDetection > (data.createdAt || data.timestamp) 
+            latestDetection: new Date(existing.latestDetection) > new Date(item.timestamp)
               ? existing.latestDetection 
-              : (data.createdAt || data.timestamp)
+              : item.timestamp
           });
         } else {
           areaMap.set(area, {
             count: 1,
-            latestDetection: data.createdAt || data.timestamp || new Date().toISOString()
+            latestDetection: item.timestamp
           });
         }
       });
 
-      // Convert map to array and sort by detection count
       return Array.from(areaMap.entries())
         .map(([area, data]) => ({
           area,
@@ -115,82 +249,20 @@ export class FirebaseService {
   }
 
   /**
-   * Extract area name from address string
-   */
-  private static extractAreaFromAddress(address: string): string {
-    // Split address by comma and take the first meaningful part
-    const parts = address.split(',').map(part => part.trim());
-    
-    // Look for common area indicators
-    for (const part of parts) {
-      if (part && 
-          !part.includes('India') && 
-          !part.includes('West Bengal') && 
-          !part.includes('North 24 Parganas') &&
-          !part.includes('Barrackpore') &&
-          !part.match(/^\d+$/) && // Not just numbers
-          part.length > 2) {
-        return part;
-      }
-    }
-    
-    // Fallback to first non-empty part
-    return parts.find(part => part && part.length > 2) || 'Unknown Area';
-  }
-
-  /**
    * Fetch model results for a specific area
    */
   static async fetchModelResultsByArea(area: string): Promise<ModelResultsResponse> {
     try {
-      const modelResultsRef = collection(db, 'model_results');
-      const q = query(modelResultsRef, orderBy('createdAt', 'desc'));
-      
-      const querySnapshot = await getDocs(q);
-      const results: ModelResult[] = [];
-      
-      querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        const location = data.location || {};
-        const address = location.address || data.address || 'Unknown Address';
-        
-        // Check if this result belongs to the specified area
-        if (this.extractAreaFromAddress(address) === area) {
-          // Handle confidence_scores array - calculate average if it's an array
-          let confidenceScore = 0;
-          if (data.confidence_scores && Array.isArray(data.confidence_scores)) {
-            const sum = data.confidence_scores.reduce((acc: number, score: number) => acc + score, 0);
-            confidenceScore = data.confidence_scores.length > 0 ? sum / data.confidence_scores.length : 0;
-          } else if (data.confidence_score) {
-            confidenceScore = data.confidence_score;
-          }
-          
-          results.push({
-            id: doc.id,
-            latitude: location.latitude || data.latitude || 0,
-            longitude: location.longitude || data.longitude || 0,
-            confidence_score: confidenceScore,
-            accuracy: location.accuracy || data.accuracy || 0,
-            address: address,
-            timestamp: data.createdAt || data.timestamp || new Date().toISOString(),
-            model_version: data.model_version,
-            image_url: data.image_url,
-            status: data.status,
-            workStatus: data.workStatus,
-            assignedAt: data.assignedAt,
-            updatedAt: data.updatedAt
-          });
-        }
-      });
+      const { results } = await this.fetchModelResults();
+      const filtered = results.filter(r => this.extractAreaFromAddress(r.address) === area);
 
-      // Calculate average confidence
-      const averageConfidence = results.length > 0 
-        ? results.reduce((sum, result) => sum + result.confidence_score, 0) / results.length
+      const averageConfidence = filtered.length > 0 
+        ? filtered.reduce((sum, result) => sum + result.confidence_score, 0) / filtered.length
         : 0;
 
       return {
-        results,
-        totalCount: results.length,
+        results: filtered,
+        totalCount: filtered.length,
         averageConfidence,
         lastUpdated: new Date().toISOString()
       };
@@ -207,60 +279,14 @@ export class FirebaseService {
     pageSize: number = 100
   ): Promise<ModelResultsResponse> {
     try {
-      const modelResultsRef = collection(db, 'model_results');
-      const q = query(
-        modelResultsRef, 
-        orderBy('createdAt', 'desc'),
-        limit(pageSize)
-      );
-
-      const querySnapshot = await getDocs(q);
-      const results: ModelResult[] = [];
-      
-      querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        
-        // Extract location object fields
-        const location = data.location || {};
-        
-        // Handle confidence_scores array - calculate average if it's an array
-        let confidenceScore = 0;
-        if (data.confidence_scores && Array.isArray(data.confidence_scores)) {
-          // Calculate average of confidence_scores array
-          const sum = data.confidence_scores.reduce((acc: number, score: number) => acc + score, 0);
-          confidenceScore = data.confidence_scores.length > 0 ? sum / data.confidence_scores.length : 0;
-        } else if (data.confidence_score) {
-          // Fallback to single confidence_score if array doesn't exist
-          confidenceScore = data.confidence_score;
-        }
-        
-        results.push({
-          id: doc.id,
-          latitude: location.latitude || data.latitude || 0,
-          longitude: location.longitude || data.longitude || 0,
-          confidence_score: confidenceScore,
-          accuracy: location.accuracy || data.accuracy || 0,
-          address: location.address || data.address || 'Unknown Address',
-          timestamp: data.createdAt || data.timestamp || new Date().toISOString(),
-          model_version: data.model_version,
-          image_url: data.image_url,
-          status: data.status,
-          workStatus: data.workStatus,
-          assignedAt: data.assignedAt,
-          updatedAt: data.updatedAt
-        });
-      });
-
-      const averageConfidence = results.length > 0 
-        ? results.reduce((sum, result) => sum + result.confidence_score, 0) / results.length
-        : 0;
-
+      const { results, totalCount, averageConfidence, lastUpdated } = await this.fetchModelResults();
+      const paginatedResults = results.slice(0, pageSize);
 
       return {
-        results,
-        totalCount: results.length,
+        results: paginatedResults,
+        totalCount,
         averageConfidence,
-        lastUpdated: new Date().toISOString()
+        lastUpdated
       };
     } catch (error) {
       console.error('Error fetching paginated model results:', error);
@@ -495,35 +521,52 @@ export class FirebaseService {
   static async fetchCitizens(): Promise<Citizen[]> {
     try {
       const citizensRef = collection(db, 'civilian');
-      const q = query(citizensRef, orderBy('timestamp', 'desc'));
-      
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(citizensRef);
       const citizens: Citizen[] = [];
       
       querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
         const data = doc.data();
+        const address = this.extractCleanAddress(data);
+        const lat = data.location?.latitude ?? data.latitude ?? data.gps_location?.latitude ?? 0;
+        const lng = data.location?.longitude ?? data.longitude ?? data.gps_location?.longitude ?? 0;
+        const accuracy = data.location?.accuracy ?? data.accuracy ?? data.gps_location?.accuracy;
+
+        let timestamp: Date;
+        if (data.timestamp?.toDate) {
+          timestamp = data.timestamp.toDate();
+        } else if (data.timestamp) {
+          timestamp = new Date(data.timestamp);
+        } else if (data.createdAt) {
+          timestamp = new Date(data.createdAt);
+        } else {
+          timestamp = new Date();
+        }
+
         citizens.push({
           id: doc.id,
-          name: data.name || 'Unknown',
-          imageUrl: data.imageUrl || '',
+          name: data.name || 'Anonymous Citizen',
+          imageUrl: data.imageUrl || data.image_url || data.image || '',
           location: {
-            latitude: data.location?.latitude || 0,
-            longitude: data.location?.longitude || 0,
-            accuracy: data.location?.accuracy,
-            address: data.location?.address
+            latitude: Number(lat) || 0,
+            longitude: Number(lng) || 0,
+            accuracy: accuracy,
+            address: address
           },
-          description: data.description || '',
-          timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp),
+          description: data.description || 'Garbage dumping report submitted by citizen',
+          timestamp: isNaN(timestamp.getTime()) ? new Date() : timestamp,
           status: data.status || 'pending',
           email: data.email,
           phone: data.phone,
-          area: data.area,
+          area: data.area || this.extractAreaFromAddress(address),
           language: data.language || 'en',
-          notifications: data.notifications || true,
-          totalReports: data.totalReports || 0,
-          verifiedReports: data.verifiedReports || 0
+          notifications: data.notifications ?? true,
+          totalReports: data.totalReports || 1,
+          verifiedReports: data.verifiedReports || (data.status === 'resolved' ? 1 : 0)
         });
       });
+
+      // Sort in memory by timestamp descending
+      citizens.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
       return citizens;
     } catch (error) {
