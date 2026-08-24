@@ -1,6 +1,6 @@
 'use client';
 
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Bell, Search, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
@@ -38,6 +38,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
         {/* Right side - Notifications and user menu */}
         <div className="flex items-center space-x-3">
+          <a
+            href="https://safai-citizen.vercel.app/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open the citizen reporting platform"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 sm:text-sm"
+          >
+            <span>Safai-Citizen</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
           <div className="hidden rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 lg:block">
             System Online
           </div>

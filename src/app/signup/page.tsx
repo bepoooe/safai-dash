@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -51,27 +51,36 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
-            <User className="h-6 w-6 text-indigo-600" />
+    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top_left,_#0f766e_0%,_transparent_35%),radial-gradient(circle_at_bottom_right,_#1d4ed8_0%,_transparent_40%)]" />
+      <div className="absolute -left-24 top-16 -z-10 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
+      <div className="absolute -right-24 bottom-10 -z-10 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl" />
+      <div className="relative w-full max-w-md">
+        <Link href="/" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-200 transition hover:text-white">
+          <ArrowLeft className="h-4 w-4" />
+          Back to home
+        </Link>
+        <div className="rounded-3xl border border-white/15 bg-white/[0.96] p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
+          <div className="text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 shadow-sm">
+            <User className="h-7 w-7 text-emerald-700" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+          <p className="mt-5 text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">SafaiSathi workspace</p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+            Join the team
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-sm text-slate-600">
             Or{' '}
             <Link
               href="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="font-bold text-emerald-700 hover:text-emerald-800"
             >
               sign in to your existing account
             </Link>
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -87,7 +96,7 @@ export default function SignupPage() {
                   type="text"
                   autoComplete="name"
                   required
-                  className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="relative block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3.5 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:text-sm"
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -109,7 +118,7 @@ export default function SignupPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="relative block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3.5 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:text-sm"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -131,7 +140,7 @@ export default function SignupPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
-                  className="appearance-none relative block w-full px-3 py-3 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="relative block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3.5 pl-10 pr-10 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:text-sm"
                   placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -164,7 +173,7 @@ export default function SignupPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
-                  className="appearance-none relative block w-full px-3 py-3 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="relative block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3.5 pl-10 pr-10 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:text-sm"
                   placeholder="Confirm your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -185,14 +194,14 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
+            <div className="rounded-xl bg-red-50 px-3 py-2 text-center text-sm font-medium text-red-700">{error}</div>
           )}
 
           <div>
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative flex w-full justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? 'Creating account...' : 'Create account'}
             </button>
@@ -200,15 +209,16 @@ export default function SignupPage() {
 
           <div className="text-sm text-center text-gray-600">
             By creating an account, you agree to our{' '}
-            <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <a href="#" className="font-bold text-emerald-700 hover:text-emerald-800">
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <a href="#" className="font-bold text-emerald-700 hover:text-emerald-800">
               Privacy Policy
             </a>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
