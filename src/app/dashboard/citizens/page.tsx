@@ -109,11 +109,8 @@ export default function CitizensPage() {
   const handleUpdateStatus = async (id: string, newStatus: 'pending' | 'in_progress' | 'resolved') => {
     try {
       setLoading(true);
-      const citizen = citizens.find(c => c.id === id);
-      if (citizen) {
-        await FirebaseService.updateCitizen(id, { ...citizen, status: newStatus });
-        await loadCitizensData(); // Reload data
-      }
+      await FirebaseService.updateCitizenStatus(id, newStatus);
+      await loadCitizensData(); // Reload data
     } catch (err) {
       console.error('Error updating citizen status:', err);
       setError('Failed to update citizen status. Please try again.');

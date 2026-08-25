@@ -1,7 +1,8 @@
 'use client';
 
-import { Menu, Bell, Search, ExternalLink } from 'lucide-react';
+import { Menu, Search, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -53,11 +54,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <div className="hidden lg:block rounded-full border border-[#ded4c5] bg-[#f5ede2] px-3 py-1 text-xs font-bold text-[#8a4220]">
             System Online
           </div>
-          {/* Notifications */}
-          <button className="relative rounded-lg p-2 text-[#6b5c4e] transition hover:bg-[#f5ede2] hover:text-[#241c15]" aria-label="Notifications">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-[#964b28] rounded-full"></span>
-          </button>
+          {/* Notifications Dropdown */}
+          <NotificationDropdown />
 
           {/* User menu */}
           <div className="flex items-center gap-2">

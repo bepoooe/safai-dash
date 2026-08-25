@@ -19,6 +19,9 @@ export interface Citizen {
   notifications?: boolean;
   totalReports?: number;
   verifiedReports?: number;
+  assignedStaffId?: string;
+  assignedStaffName?: string;
+  assignedAt?: string;
 }
 
 // Citizen statistics interface

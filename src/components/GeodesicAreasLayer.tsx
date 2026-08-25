@@ -4,189 +4,348 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { ModelResult } from '@/types/garbage-detection';
+import { Citizen } from '@/types/citizen';
+import { DispatchTarget } from './SafaiDispatchModal';
 
 interface GeodesicAreasLayerProps {
   results: ModelResult[];
+  citizens?: Citizen[];
+  showCctv?: boolean;
+  showCitizens?: boolean;
+  selectedTarget?: { id: string; type: 'cctv' | 'citizen'; lat: number; lng: number } | null;
+  onSelectTarget?: (target: { id: string; type: 'cctv' | 'citizen'; lat: number; lng: number }) => void;
+  onDeployStaff?: (target: DispatchTarget) => void;
 }
 
-export default function GeodesicAreasLayer({ results }: GeodesicAreasLayerProps) {
+export default function GeodesicAreasLayer({
+  results,
+  citizens = [],
+  showCctv = true,
+  showCitizens = true,
+  selectedTarget,
+  onSelectTarget,
+  onDeployStaff
+}: GeodesicAreasLayerProps) {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
+  const isFirstRender = useRef(true);
 
-  // Function to get color based on confidence score
+  // Helper for confidence color
   const getColorByConfidence = (confidence: number): string => {
-    if (confidence >= 0.8) return '#dc2626'; // red - high confidence
-    if (confidence >= 0.6) return '#ea580c'; // orange - medium-high confidence
-    if (confidence >= 0.4) return '#f59e0b'; // amber - medium confidence
-    if (confidence >= 0.2) return '#84cc16'; // lime - low confidence
-    return '#16a34a'; // green - very low confidence
+    if (confidence >= 0.8) return '#dc2626'; // High overflow - Red
+    if (confidence >= 0.6) return '#ea580c'; // Med-High - Orange
+    if (confidence >= 0.4) return '#f59e0b'; // Medium - Amber
+    if (confidence >= 0.2) return '#84cc16'; // Low - Lime
+    return '#16a34a'; // Clean - Green
   };
 
-  // Function to calculate radius based on accuracy (100-200 meters)
   const getRadiusFromAccuracy = (accuracy: number | string): number => {
-    let radius = 150; // default radius
-    
+    let radius = 150;
     if (typeof accuracy === 'string') {
-      // Extract number from string like "±78 meters" or "78m"
       const match = accuracy.match(/(\d+)/);
-      if (match) {
-        radius = parseInt(match[1]);
-      }
+      if (match) radius = parseInt(match[1]);
     } else if (typeof accuracy === 'number') {
       radius = accuracy;
     }
-    
-    // Ensure radius is within 100-200m range
-    radius = Math.max(100, Math.min(200, radius));
-    
-    return radius;
+    return Math.max(80, Math.min(220, radius));
   };
 
-  // Function to format timestamp to human-readable format
-  const formatTimestamp = (timestamp: string): string => {
+  const formatTimestamp = (timestamp: string | Date): string => {
     try {
       const date = new Date(timestamp);
-      return date.toLocaleString('en-US', {
-        year: 'numeric',
+      return date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        minute: '2-digit'
       });
     } catch {
-      return 'Unknown Date';
+      return 'Recent';
     }
   };
 
+  // Fly to selected target when updated
   useEffect(() => {
-    if (!map || !results.length) return;
+    if (!map || !selectedTarget) return;
+    if (selectedTarget.lat && selectedTarget.lng) {
+      map.flyTo([selectedTarget.lat, selectedTarget.lng], 16, {
+        duration: 1.2
+      });
+    }
+  }, [map, selectedTarget]);
 
-    // Remove existing layer group if it exists
+  useEffect(() => {
+    if (!map) return;
+
+    // Remove existing layer group
     if (layerGroupRef.current) {
       map.removeLayer(layerGroupRef.current);
     }
 
-    // Create new layer group
     const layerGroup = L.layerGroup();
     layerGroupRef.current = layerGroup;
 
-    // Add circles for each result
-    results.forEach((result) => {
-      const { latitude, longitude, confidence_score, accuracy, address, timestamp } = result;
-      
-      // Skip invalid coordinates
-      if (!latitude || !longitude || latitude === 0 || longitude === 0) {
-        return;
-      }
+    const allMarkers: L.Marker[] = [];
 
-      const radius = getRadiusFromAccuracy(accuracy);
-      const color = getColorByConfidence(confidence_score);
-      
-      // Create circle
-      const circle = L.circle([latitude, longitude], {
-        radius: radius,
-        color: color,
-        weight: 2,
-        opacity: 0.8,
-        fillColor: color,
-        fillOpacity: 0.3
-      });
+    // ================= 1. AI CCTV DETECTIONS =================
+    if (showCctv && results.length > 0) {
+      results.forEach((result) => {
+        const { id, latitude, longitude, confidence_score, accuracy, address, timestamp, workStatus } = result;
+        if (!latitude || !longitude || (latitude === 0 && longitude === 0)) return;
 
-      // Create tooltip content with improved formatting
-      const tooltipContent = `
-        <div class="p-3 min-w-[180px]">
-          <div class="font-semibold text-sm mb-2 text-gray-800">🗑️ Garbage Detection</div>
-          <div class="space-y-1 text-xs">
-            <div class="flex justify-between">
-              <span class="text-gray-600">Confidence:</span>
-              <span class="font-medium text-gray-800">${(confidence_score * 100).toFixed(1)}%</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Accuracy:</span>
-              <span class="font-medium text-gray-800">${typeof accuracy === 'string' ? accuracy : `±${accuracy}m`}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Created:</span>
-              <span class="font-medium text-gray-800 text-xs">${formatTimestamp(timestamp)}</span>
-            </div>
-            <div class="mt-2 pt-2 border-t border-gray-200">
-              <span class="text-gray-600 text-xs">📍 ${address}</span>
-            </div>
-          </div>
-        </div>
-      `;
+        const isSelected = selectedTarget?.id === id && selectedTarget?.type === 'cctv';
+        const radius = getRadiusFromAccuracy(accuracy);
+        const color = getColorByConfidence(confidence_score);
 
-      // Add tooltip
-      circle.bindTooltip(tooltipContent, {
-        permanent: false,
-        direction: 'top',
-        offset: [0, -10],
-        className: 'custom-tooltip'
-      });
-
-      // Add popup with more details
-      const popupContent = `
-        <div class="p-4 min-w-[250px]">
-          <div class="font-semibold text-lg mb-3 text-gray-800">🗑️ Garbage Detection Details</div>
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">Confidence Score:</span>
-              <span class="font-medium text-lg ${confidence_score >= 0.8 ? 'text-red-600' : confidence_score >= 0.6 ? 'text-orange-600' : confidence_score >= 0.4 ? 'text-amber-600' : confidence_score >= 0.2 ? 'text-lime-600' : 'text-green-600'}">${(confidence_score * 100).toFixed(1)}%</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">GPS Accuracy:</span>
-              <span class="font-medium">${typeof accuracy === 'string' ? accuracy : `±${accuracy}m`}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Detection Radius:</span>
-              <span class="font-medium">${radius}m</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Created At:</span>
-              <span class="font-medium text-xs">${formatTimestamp(timestamp)}</span>
-            </div>
-            <div class="mt-3 pt-3 border-t border-gray-200">
-              <span class="text-gray-600 block mb-2">📍 Address:</span>
-              <span class="text-sm bg-gray-100 p-2 rounded block">${address}</span>
-            </div>
-            <div class="mt-2">
-              <span class="text-gray-600 block mb-1">🌐 Coordinates:</span>
-              <span class="text-xs text-gray-500 font-mono">${latitude.toFixed(6)}, ${longitude.toFixed(6)}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      circle.bindPopup(popupContent);
-
-      // Add to layer group
-      layerGroup.addLayer(circle);
-    });
-
-    // Add layer group to map
-    layerGroup.addTo(map);
-
-    // Fit map to show all points if there are results
-    if (results.length > 0) {
-      const validResults = results.filter(r => r.latitude && r.longitude && r.latitude !== 0 && r.longitude !== 0);
-      if (validResults.length > 0) {
-        const group = L.featureGroup();
-        validResults.forEach(result => {
-          group.addLayer(L.marker([result.latitude, result.longitude]));
+        // Accuracy Circle
+        const circle = L.circle([latitude, longitude], {
+          radius: radius,
+          color: color,
+          weight: isSelected ? 3 : 1.5,
+          opacity: isSelected ? 0.95 : 0.75,
+          fillColor: color,
+          fillOpacity: isSelected ? 0.4 : 0.22
         });
-        map.fitBounds(group.getBounds().pad(0.1));
-      }
+
+        // CCTV Div Icon Marker
+        const cctvIcon = L.divIcon({
+          className: 'cctv-marker-icon',
+          html: `
+            <div style="
+              width: ${isSelected ? '36px' : '30px'};
+              height: ${isSelected ? '36px' : '30px'};
+              background: ${color};
+              color: white;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: ${isSelected ? '3px solid #fff' : '2px solid #fff'};
+              box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+              font-size: ${isSelected ? '15px' : '13px'};
+              cursor: pointer;
+              transition: transform 0.2s;
+            ">
+              📹
+            </div>
+          `,
+          iconSize: [isSelected ? 36 : 30, isSelected ? 36 : 30],
+          iconAnchor: [isSelected ? 18 : 15, isSelected ? 18 : 15]
+        });
+
+        const marker = L.marker([latitude, longitude], { icon: cctvIcon });
+        allMarkers.push(marker);
+
+        // Build Popup DOM Element
+        const popupDiv = document.createElement('div');
+        popupDiv.className = 'p-3 min-w-[220px] max-w-[260px] text-gray-900 font-sans';
+        popupDiv.innerHTML = `
+          <div class="flex items-center justify-between gap-1 mb-2 pb-1.5 border-b border-gray-200">
+            <span class="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#964b28]">
+              📹 AI CCTV Detection
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold" style="background: ${color}20; color: ${color};">
+              ${(confidence_score * 100).toFixed(0)}% Conf
+            </span>
+          </div>
+
+          <div class="space-y-1.5 text-xs">
+            <p class="font-bold text-gray-900 leading-snug">${address}</p>
+            <div class="flex justify-between text-[11px] text-gray-500">
+              <span>GPS Accuracy:</span>
+              <span class="font-medium text-gray-700">${typeof accuracy === 'string' ? accuracy : `±${accuracy}m`}</span>
+            </div>
+            <div class="flex justify-between text-[11px] text-gray-500">
+              <span>Detected:</span>
+              <span class="font-medium text-gray-700">${formatTimestamp(timestamp)}</span>
+            </div>
+            <div class="flex justify-between text-[11px] text-gray-500">
+              <span>Dispatch Status:</span>
+              <span class="font-bold capitalize ${workStatus === 'in_progress' ? 'text-orange-600' : workStatus === 'completed' ? 'text-green-600' : 'text-amber-600'}">
+                ${workStatus || 'Pending'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            class="deploy-btn mt-3 w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-[#964b28] hover:bg-[#7e3e1f] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+          >
+            <span>👷 Deploy Safai Karmi</span>
+          </button>
+        `;
+
+        const deployBtn = popupDiv.querySelector('.deploy-btn');
+        if (deployBtn && onDeployStaff) {
+          deployBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onDeployStaff({
+              id,
+              type: 'cctv',
+              address,
+              latitude,
+              longitude,
+              confidence_score,
+              currentStatus: workStatus
+            });
+          });
+        }
+
+        marker.bindPopup(popupDiv);
+        circle.bindPopup(popupDiv);
+
+        marker.on('click', () => {
+          if (onSelectTarget) {
+            onSelectTarget({ id, type: 'cctv', lat: latitude, lng: longitude });
+          }
+        });
+
+        circle.on('click', () => {
+          if (onSelectTarget) {
+            onSelectTarget({ id, type: 'cctv', lat: latitude, lng: longitude });
+          }
+        });
+
+        layerGroup.addLayer(circle);
+        layerGroup.addLayer(marker);
+      });
     }
 
-    // Cleanup function
+    // ================= 2. CITIZEN REPORTS =================
+    if (showCitizens && citizens.length > 0) {
+      citizens.forEach((citizen) => {
+        const { id, name, location, timestamp, status, description, imageUrl, assignedStaffName } = citizen;
+        const lat = location?.latitude;
+        const lng = location?.longitude;
+        if (!lat || !lng || (lat === 0 && lng === 0)) return;
+
+        const isSelected = selectedTarget?.id === id && selectedTarget?.type === 'citizen';
+        const statusColor = status === 'resolved' ? '#16a34a' : status === 'in_progress' ? '#ea580c' : '#2563eb';
+        const address = location.address || 'Kolkata Metropolitan Area';
+
+        // Citizen Div Icon Marker
+        const citizenIcon = L.divIcon({
+          className: 'citizen-marker-icon',
+          html: `
+            <div style="
+              width: ${isSelected ? '36px' : '30px'};
+              height: ${isSelected ? '36px' : '30px'};
+              background: ${statusColor};
+              color: white;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: ${isSelected ? '3px solid #fff' : '2px solid #fff'};
+              box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+              font-size: ${isSelected ? '15px' : '13px'};
+              cursor: pointer;
+              transition: transform 0.2s;
+            ">
+              👤
+            </div>
+          `,
+          iconSize: [isSelected ? 36 : 30, isSelected ? 36 : 30],
+          iconAnchor: [isSelected ? 18 : 15, isSelected ? 18 : 15]
+        });
+
+        const marker = L.marker([lat, lng], { icon: citizenIcon });
+        allMarkers.push(marker);
+
+        // Build Popup DOM Element
+        const popupDiv = document.createElement('div');
+        popupDiv.className = 'p-3 min-w-[220px] max-w-[260px] text-gray-900 font-sans';
+        popupDiv.innerHTML = `
+          <div class="flex items-center justify-between gap-1 mb-2 pb-1.5 border-b border-gray-200">
+            <span class="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-blue-700">
+              👤 Citizen Report
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase" style="background: ${statusColor}20; color: ${statusColor};">
+              ${status}
+            </span>
+          </div>
+
+          <div class="space-y-1.5 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-gray-900">${name}</span>
+              <span class="text-[10px] text-gray-500">${formatTimestamp(timestamp)}</span>
+            </div>
+            
+            <p class="font-medium text-gray-800 text-[11px] leading-snug">${address}</p>
+
+            ${description ? `
+              <p class="text-[11px] text-gray-600 bg-gray-50 p-1.5 rounded border border-gray-200 italic line-clamp-2">
+                &ldquo;${description}&rdquo;
+              </p>
+            ` : ''}
+
+            ${imageUrl ? `
+              <div class="mt-1 rounded overflow-hidden max-h-24 bg-gray-100 border border-gray-200">
+                <img src="${imageUrl}" alt="Report" class="w-full h-full object-cover" />
+              </div>
+            ` : ''}
+
+            ${assignedStaffName ? `
+              <div class="text-[10px] text-emerald-700 bg-emerald-50 p-1 rounded font-medium">
+                Assigned: ${assignedStaffName}
+              </div>
+            ` : ''}
+          </div>
+
+          <button
+            class="deploy-btn mt-3 w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-[#964b28] hover:bg-[#7e3e1f] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+          >
+            <span>👷 Deploy Safai Karmi</span>
+          </button>
+        `;
+
+        const deployBtn = popupDiv.querySelector('.deploy-btn');
+        if (deployBtn && onDeployStaff) {
+          deployBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onDeployStaff({
+              id,
+              type: 'citizen',
+              address,
+              latitude: lat,
+              longitude: lng,
+              description,
+              imageUrl,
+              citizenName: name,
+              currentStatus: status,
+              currentStaffName: assignedStaffName
+            });
+          });
+        }
+
+        marker.bindPopup(popupDiv);
+
+        marker.on('click', () => {
+          if (onSelectTarget) {
+            onSelectTarget({ id, type: 'citizen', lat, lng });
+          }
+        });
+
+        layerGroup.addLayer(marker);
+      });
+    }
+
+    layerGroup.addTo(map);
+
+    // Initial fit bounds once on first load
+    if (isFirstRender.current && allMarkers.length > 0) {
+      const group = L.featureGroup(allMarkers);
+      map.fitBounds(group.getBounds().pad(0.1));
+      isFirstRender.current = false;
+    }
+
     return () => {
       if (layerGroupRef.current) {
         map.removeLayer(layerGroupRef.current);
         layerGroupRef.current = null;
       }
     };
-  }, [map, results]);
+  }, [map, results, citizens, showCctv, showCitizens, selectedTarget, onSelectTarget, onDeployStaff]);
 
   return null;
 }

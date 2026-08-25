@@ -1,7 +1,29 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, Search, Filter, MapPin, Phone, User, CheckCircle, AlertTriangle, RefreshCw, Briefcase, Square, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { 
+  Users, 
+  Plus, 
+  Search, 
+  Filter, 
+  MapPin, 
+  Phone, 
+  User, 
+  CheckCircle, 
+  AlertTriangle, 
+  RefreshCw, 
+  Briefcase, 
+  Square, 
+  X,
+  Navigation,
+  ExternalLink,
+  Clock,
+  Play,
+  Star,
+  Check,
+  Ban,
+  Sparkles
+} from 'lucide-react';
 import { SafaiKarmi, AssignedWork } from '@/types/staff';
 import SafaiKarmiModal from '@/components/SafaiKarmiModal';
 import WhatsAppNotificationButton from '@/components/WhatsAppNotificationButton';
@@ -28,6 +50,8 @@ export default function StaffPage() {
     unassignedDetections: 0
   });
   const [selectedKarmiWork, setSelectedKarmiWork] = useState<AssignedWork[] | null>(null);
+  const [viewWorkKarmi, setViewWorkKarmi] = useState<SafaiKarmi | null>(null);
+  const [workModalFilter, setWorkModalFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed' | 'cancelled'>('all');
   const [showWorkModal, setShowWorkModal] = useState(false);
 
   // Auto-assign work for unassigned detections
@@ -302,6 +326,8 @@ export default function StaffPage() {
   const handleViewAssignedWork = async (karmi: SafaiKarmi) => {
     try {
       setLoading(true);
+      setViewWorkKarmi(karmi);
+      setWorkModalFilter('all');
       const assignedWork = await AssignmentService.getAssignedWorkForStaff(karmi.id);
       setSelectedKarmiWork(assignedWork);
       setShowWorkModal(true);
@@ -316,6 +342,7 @@ export default function StaffPage() {
   const handleCloseWorkModal = () => {
     setShowWorkModal(false);
     setSelectedKarmiWork(null);
+    setViewWorkKarmi(null);
   };
 
   const handleUpdateWorkStatus = async (detectionId: string, status: 'pending' | 'in_progress' | 'completed' | 'cancelled') => {
@@ -649,94 +676,234 @@ export default function StaffPage() {
         mode={modalMode}
       />
 
-      {/* Assigned Work Modal */}
-      {showWorkModal && selectedKarmiWork && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
-          <div className="relative mx-auto my-4 sm:my-8 max-w-2xl shadow-lg rounded-md bg-white">
-            <div className="flex items-center justify-between mb-6 p-4 sm:p-5 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-medium text-gray-900">
-                Assigned Work ({selectedKarmiWork.length} tasks)
-              </h3>
-              <button
-                onClick={handleCloseWorkModal}
-                className="text-gray-400 hover:text-gray-600 flex-shrink-0"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto px-4 sm:px-5">
-              {selectedKarmiWork.map((work) => (
-                <div key={work.detectionId} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm font-medium text-gray-900">{work.address}</span>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          work.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          work.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                          work.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {work.status}
+      {/* Modern Upgraded Assigned Work Modal */}
+      {showWorkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+          <div className="relative my-4 w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-[#ded5c5] overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-[#8a4220] to-[#ba7861] p-4 sm:p-5 text-white flex-shrink-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-white font-black text-sm sm:text-base flex-shrink-0">
+                    {viewWorkKarmi?.name.charAt(0) || 'K'}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-black leading-tight truncate">
+                        {viewWorkKarmi?.name || 'Safai Karmi'}
+                      </h3>
+                      {viewWorkKarmi?.rating && (
+                        <span className="inline-flex items-center gap-0.5 text-[11px] font-bold bg-white/20 px-2 py-0.5 rounded-full">
+                          <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
+                          {viewWorkKarmi.rating}
                         </span>
-                      </div>
-                      <div className="text-sm text-gray-500 space-y-1">
-                        <p>Confidence: {(work.confidenceScore * 100).toFixed(1)}%</p>
-                        <p>Assigned: {new Date(work.assignedAt).toLocaleString()}</p>
-                        <p>Location: {work.latitude.toFixed(4)}, {work.longitude.toFixed(4)}</p>
-                      </div>
+                      )}
                     </div>
-                    <div className="flex space-x-2 ml-4">
-                      {work.status === 'pending' && (
-                        <button
-                          onClick={() => handleUpdateWorkStatus(work.detectionId, 'in_progress')}
-                          className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100"
-                        >
-                          Start
-                        </button>
-                      )}
-                      {work.status === 'in_progress' && (
-                        <button
-                          onClick={() => handleUpdateWorkStatus(work.detectionId, 'completed')}
-                          className="px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100"
-                        >
-                          Complete
-                        </button>
-                      )}
-                      {(work.status === 'pending' || work.status === 'in_progress') && (
-                        <button
-                          onClick={() => handleUpdateWorkStatus(work.detectionId, 'cancelled')}
-                          className="px-3 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      
-                      {/* WhatsApp Notification Button */}
-                      {selectedKarmiWork && (
-                        <WhatsAppNotificationButton
-                          staff={karmis.find(k => k.assignedWork?.some(w => w.detectionId === work.detectionId)) || karmis[0]}
-                          work={work}
-                          type={work.status === 'completed' ? 'work_completed' : 'work_assignment'}
-                          className="text-xs"
-                          showPreview={false}
-                        />
-                      )}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-amber-100 mt-1 font-medium">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                        {viewWorkKarmi?.workingArea || 'Assigned Ward'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                        {viewWorkKarmi?.phone || 'No Phone'}
+                      </span>
                     </div>
                   </div>
                 </div>
-              ))}
+
+                <button
+                  onClick={handleCloseWorkModal}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors flex-shrink-0"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
-            {selectedKarmiWork.length === 0 && (
-              <div className="text-center py-8">
-                <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No assigned work</h3>
-                <p className="text-gray-500">This staff member has no assigned work at the moment.</p>
+            {/* Task Summary KPI Grid */}
+            {selectedKarmiWork && selectedKarmiWork.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 p-3 sm:p-4 bg-[#fdfbf7] border-b border-[#ded5c5] flex-shrink-0">
+                <div className="p-2 rounded-xl bg-white border border-[#ded5c5] text-center shadow-2xs">
+                  <p className="text-[10px] font-bold uppercase text-[#7a6a58]">Total</p>
+                  <p className="text-base sm:text-lg font-black text-[#1f1712]">{selectedKarmiWork.length}</p>
+                </div>
+                <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-center shadow-2xs">
+                  <p className="text-[10px] font-bold uppercase text-amber-800">Pending</p>
+                  <p className="text-base sm:text-lg font-black text-amber-900">
+                    {selectedKarmiWork.filter(w => w.status === 'pending').length}
+                  </p>
+                </div>
+                <div className="p-2 rounded-xl bg-orange-50 border border-orange-200 text-center shadow-2xs">
+                  <p className="text-[10px] font-bold uppercase text-orange-800">In Progress</p>
+                  <p className="text-base sm:text-lg font-black text-orange-900">
+                    {selectedKarmiWork.filter(w => w.status === 'in_progress').length}
+                  </p>
+                </div>
+                <div className="p-2 rounded-xl bg-green-50 border border-green-200 text-center shadow-2xs">
+                  <p className="text-[10px] font-bold uppercase text-green-800">Completed</p>
+                  <p className="text-base sm:text-lg font-black text-green-900">
+                    {selectedKarmiWork.filter(w => w.status === 'completed').length}
+                  </p>
+                </div>
               </div>
             )}
+
+            {/* Modal Filter Tabs */}
+            {selectedKarmiWork && selectedKarmiWork.length > 0 && (
+              <div className="flex items-center gap-1.5 px-4 sm:px-5 py-2 border-b border-[#ded5c5] bg-white overflow-x-auto flex-shrink-0">
+                {(['all', 'pending', 'in_progress', 'completed'] as const).map((tab) => {
+                  const count = tab === 'all' 
+                    ? selectedKarmiWork.length 
+                    : selectedKarmiWork.filter(w => w.status === tab).length;
+
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setWorkModalFilter(tab)}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg transition capitalize shrink-0 ${
+                        workModalFilter === tab
+                          ? 'bg-[#964b28] text-white shadow-2xs'
+                          : 'text-[#7a6a58] hover:bg-[#fdfbf7]'
+                      }`}
+                    >
+                      {tab === 'all' ? 'All Tasks' : tab.replace('_', ' ')} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Scrollable Tasks Body */}
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1 bg-[#faf8f4]">
+              {selectedKarmiWork && selectedKarmiWork
+                .filter(w => workModalFilter === 'all' || w.status === workModalFilter)
+                .map((work) => {
+                  const statusBadgeClass = 
+                    work.status === 'completed' ? 'bg-green-100 text-green-800 border-green-200' :
+                    work.status === 'in_progress' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                    work.status === 'cancelled' ? 'bg-red-100 text-red-800 border-red-200' :
+                    'bg-amber-100 text-amber-800 border-amber-200';
+
+                  const mapNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${work.latitude},${work.longitude}`;
+
+                  return (
+                    <div 
+                      key={work.detectionId} 
+                      className="bg-white border border-[#ded5c5] rounded-xl p-3.5 sm:p-4 shadow-xs space-y-3 hover:border-[#ba7861] transition"
+                    >
+                      {/* Top Row: Location & Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[#ded8c4] text-[#4a3b32]">
+                              Garbage Hotspot
+                            </span>
+                            <span className="text-[10px] font-bold text-[#7a6a58] flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {new Date(work.assignedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm font-bold text-[#1f1712] leading-snug">
+                            {work.address}
+                          </p>
+                        </div>
+
+                        <span className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-full border ${statusBadgeClass} shrink-0`}>
+                          {work.status.replace('_', ' ')}
+                        </span>
+                      </div>
+
+                      {/* Coordinates & Google Maps Link */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#f0e8dc] text-xs">
+                        <div className="flex items-center gap-3 text-[#7a6a58] font-mono text-[11px]">
+                          <span>{work.latitude.toFixed(4)}°N, {work.longitude.toFixed(4)}°E</span>
+                          {work.confidenceScore > 0 && (
+                            <span className="font-sans font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
+                              {(work.confidenceScore * 100).toFixed(0)}% Severity
+                            </span>
+                          )}
+                        </div>
+
+                        <a
+                          href={mapNavUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#964b28] hover:text-[#7e3e1f] hover:underline"
+                        >
+                          <Navigation className="h-3 w-3" />
+                          <span>Google Maps Route</span>
+                          <ExternalLink className="h-2.5 w-2.5" />
+                        </a>
+                      </div>
+
+                      {/* Action Controls */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#f0e8dc]">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {work.status === 'pending' && (
+                            <button
+                              onClick={() => handleUpdateWorkStatus(work.detectionId, 'in_progress')}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-[#964b28] hover:bg-[#7e3e1f] rounded-lg shadow-2xs transition"
+                            >
+                              <Play className="h-3 w-3" />
+                              <span>Start Task</span>
+                            </button>
+                          )}
+                          {work.status === 'in_progress' && (
+                            <button
+                              onClick={() => handleUpdateWorkStatus(work.detectionId, 'completed')}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-2xs transition"
+                            >
+                              <Check className="h-3 w-3" />
+                              <span>Mark Complete</span>
+                            </button>
+                          )}
+                          {(work.status === 'pending' || work.status === 'in_progress') && (
+                            <button
+                              onClick={() => handleUpdateWorkStatus(work.detectionId, 'cancelled')}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
+                            >
+                              <Ban className="h-3 w-3" />
+                              <span>Cancel</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* WhatsApp Notification Button */}
+                        <div>
+                          <WhatsAppNotificationButton
+                            staff={viewWorkKarmi || karmis[0]}
+                            work={work}
+                            type={work.status === 'completed' ? 'work_completed' : 'work_assignment'}
+                            className="text-xs"
+                            showPreview={false}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+              {(!selectedKarmiWork || selectedKarmiWork.length === 0) && (
+                <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-[#ded5c5]">
+                  <Briefcase className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                  <h4 className="text-sm font-bold text-[#1f1712]">No Assigned Tasks</h4>
+                  <p className="text-xs text-[#7a6a58] mt-0.5 max-w-xs mx-auto">
+                    This Safai Karmi currently has no active cleanup deployments assigned.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3.5 bg-[#fdfbf7] border-t border-[#ded5c5] flex items-center justify-end flex-shrink-0">
+              <button
+                onClick={handleCloseWorkModal}
+                className="px-4 py-2 text-xs font-bold text-[#4a3b32] bg-white border border-[#ded5c5] rounded-xl hover:bg-[#f5ede2] transition shadow-2xs"
+              >
+                Close Work View
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -335,11 +335,12 @@ export class FirebaseService {
   static async addStaff(karmiData: Omit<SafaiKarmi, 'id'>): Promise<string> {
     try {
       const staffRef = collection(db, 'staff');
-      const docRef = await addDoc(staffRef, {
+      const sanitized = this.sanitizeFirestoreData({
         ...karmiData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
+      const docRef = await addDoc(staffRef, sanitized);
       return docRef.id;
     } catch (error) {
       console.error('Error adding staff:', error);
@@ -350,13 +351,14 @@ export class FirebaseService {
   /**
    * Update an existing staff member
    */
-  static async updateStaff(id: string, karmiData: Omit<SafaiKarmi, 'id'>): Promise<void> {
+  static async updateStaff(id: string, karmiData: Partial<SafaiKarmi>): Promise<void> {
     try {
       const staffDoc = doc(db, 'staff', id);
-      await updateDoc(staffDoc, {
+      const sanitized = this.sanitizeFirestoreData({
         ...karmiData,
         updatedAt: new Date().toISOString()
       });
+      await updateDoc(staffDoc, sanitized);
     } catch (error) {
       console.error('Error updating staff:', error);
       throw new Error('Failed to update staff in Firebase');
@@ -576,16 +578,35 @@ export class FirebaseService {
   }
 
   /**
+   * Helper to strip all undefined values before sending data to Firestore
+   */
+  static sanitizeFirestoreData<T extends Record<string, unknown>>(data: T): Record<string, unknown> {
+    const cleaned: Record<string, unknown> = {};
+    Object.keys(data).forEach((key) => {
+      const val = data[key];
+      if (val !== undefined) {
+        if (val !== null && typeof val === 'object' && !(val instanceof Date) && !Array.isArray(val)) {
+          cleaned[key] = this.sanitizeFirestoreData(val as Record<string, unknown>);
+        } else {
+          cleaned[key] = val;
+        }
+      }
+    });
+    return cleaned;
+  }
+
+  /**
    * Add a new citizen to the civilian collection
    */
   static async addCitizen(citizenData: Omit<Citizen, 'id'>): Promise<string> {
     try {
       const citizensRef = collection(db, 'civilian');
-      const docRef = await addDoc(citizensRef, {
+      const sanitized = this.sanitizeFirestoreData({
         ...citizenData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
+      const docRef = await addDoc(citizensRef, sanitized);
       return docRef.id;
     } catch (error) {
       console.error('Error adding citizen:', error);
@@ -596,16 +617,33 @@ export class FirebaseService {
   /**
    * Update an existing citizen
    */
-  static async updateCitizen(id: string, citizenData: Omit<Citizen, 'id'>): Promise<void> {
+  static async updateCitizen(id: string, citizenData: Partial<Citizen>): Promise<void> {
     try {
       const citizenDoc = doc(db, 'civilian', id);
-      await updateDoc(citizenDoc, {
+      const sanitized = this.sanitizeFirestoreData({
         ...citizenData,
         updatedAt: new Date().toISOString()
       });
+      await updateDoc(citizenDoc, sanitized);
     } catch (error) {
       console.error('Error updating citizen:', error);
       throw new Error('Failed to update citizen in Firebase');
+    }
+  }
+
+  /**
+   * Update only citizen status
+   */
+  static async updateCitizenStatus(id: string, status: 'pending' | 'in_progress' | 'resolved'): Promise<void> {
+    try {
+      const citizenDoc = doc(db, 'civilian', id);
+      await updateDoc(citizenDoc, {
+        status: status,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error updating citizen status:', error);
+      throw new Error('Failed to update citizen status in Firebase');
     }
   }
 
@@ -757,18 +795,40 @@ export class FirebaseService {
   }
 
   /**
-   * Update cloudinary analysis result status
+   * Dispatch/Assign staff member to a garbage detection
    */
-  static async updateCloudinaryAnalysisStatus(id: string, status: string): Promise<void> {
+  static async dispatchStaffToDetection(detectionId: string, staffId: string, staffName: string): Promise<void> {
     try {
-      const cloudinaryDoc = doc(db, 'cloudinary_analysis_results', id);
-      await updateDoc(cloudinaryDoc, {
-        status: status,
+      const detectionRef = doc(db, 'model_results', detectionId);
+      await updateDoc(detectionRef, {
+        staffId: staffId,
+        staffName: staffName,
+        workStatus: 'in_progress',
+        assignedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Error updating cloudinary analysis status:', error);
-      throw new Error('Failed to update cloudinary analysis status in Firebase');
+      console.error('Error dispatching staff to detection:', error);
+      throw new Error('Failed to dispatch staff to detection');
+    }
+  }
+
+  /**
+   * Dispatch/Assign staff member to a citizen report
+   */
+  static async dispatchStaffToCitizenReport(reportId: string, staffId: string, staffName: string): Promise<void> {
+    try {
+      const reportRef = doc(db, 'civilian', reportId);
+      await updateDoc(reportRef, {
+        assignedStaffId: staffId,
+        assignedStaffName: staffName,
+        status: 'in_progress',
+        assignedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error dispatching staff to citizen report:', error);
+      throw new Error('Failed to dispatch staff to citizen report');
     }
   }
 }
